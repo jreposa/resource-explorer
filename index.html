@@ -247,7 +247,6 @@ body {
      ════════════════════════════════ -->
 <script>
 const CONFIG = {
-  token:   'pat09VJffhtvnMdW9.a2d0b3a8bdfc5d6587eeee3a3964027605b418ff5b79dfe9f852a91fd0f85369',
   baseId:  'appajgKVCtfHwvgfi',
   tableId: 'tblAgyvQzBAqF72ae',
   viewId:  'viwVgPBdatwEXo3ub',
@@ -262,8 +261,9 @@ const FIELD_DEFS = [
   { key: 'Author(s)',               label: 'Author(s)',               type: 'text',        color: '#9b8ff5', group: 'Content' },
   { key: 'Publication Year',        label: 'Publication Year',        type: 'year',        color: '#f0a500', group: 'Content' },
   { key: 'Area of Emphasis',        label: 'Area of Emphasis',        type: 'categorical', color: '#7c6fff', group: 'Taxonomy' },
-  { key: 'Category',                label: 'Category',                type: 'multi', 		color: '#4ecdc4', group: 'Taxonomy' },
+  { key: 'Category',                label: 'Category',                type: 'categorical', color: '#4ecdc4', group: 'Taxonomy' },
   { key: 'Subcategory',             label: 'Subcategory',             type: 'categorical', color: '#4ecdc4', group: 'Taxonomy' },
+  { key: 'Promising Practices',     label: 'Promising Practices',     type: 'categorical', color: '#4ade80', group: 'Taxonomy' },
   { key: 'Keywords / Tags',         label: 'Keywords / Tags',         type: 'multi',       color: '#ff6b9d', group: 'Taxonomy' },
   { key: 'Media Type',              label: 'Media Type',              type: 'categorical', color: '#ff6b6b', group: 'Format' },
   { key: 'Publication Type',        label: 'Publication Type',        type: 'categorical', color: '#ff6b6b', group: 'Format' },
@@ -295,6 +295,7 @@ const GROUPS = ['Content', 'Taxonomy', 'Format', 'Audience & Scope', 'Source & A
       <span id="statusText">Loading…</span>
     </span>
     <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
+    <button class="refresh-btn" onclick="clearToken();showTokenPrompt()" style="border-color:rgba(255,107,107,.3);color:#ff6b6b">⚙ Token</button>
   </div>
 </div>
 
@@ -320,8 +321,47 @@ let ALL_RECORDS = [];
 let activeField = null;
 let showAll = false;
 
+// ── Token management ──
+function getToken() {
+  return localStorage.getItem('airtable_token_' + CONFIG.baseId);
+}
+function saveToken(t) {
+  localStorage.setItem('airtable_token_' + CONFIG.baseId, t.trim());
+}
+function clearToken() {
+  localStorage.removeItem('airtable_token_' + CONFIG.baseId);
+}
+
+function showTokenPrompt(errorMsg) {
+  const overlay = document.getElementById('tokenOverlay');
+  const errEl = document.getElementById('tokenError');
+  if (errorMsg) { errEl.textContent = errorMsg; errEl.style.display = 'block'; }
+  else { errEl.style.display = 'none'; }
+  overlay.style.display = 'flex';
+  document.getElementById('tokenInput').focus();
+}
+
+function hideTokenPrompt() {
+  document.getElementById('tokenOverlay').style.display = 'none';
+}
+
+function submitToken() {
+  const val = document.getElementById('tokenInput').value.trim();
+  if (!val.startsWith('pat')) {
+    document.getElementById('tokenError').textContent = 'Token should start with "pat" — check you copied the full key.';
+    document.getElementById('tokenError').style.display = 'block';
+    return;
+  }
+  saveToken(val);
+  hideTokenPrompt();
+  loadData();
+}
+
 // ── Airtable fetch (paginated) ──
 async function loadData() {
+  const token = getToken();
+  if (!token) { showTokenPrompt(); return; }
+
   setStatus('loading', 'Loading…');
   ALL_RECORDS = [];
   const base = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent('Master Publication Database')}`;
@@ -331,15 +371,22 @@ async function loadData() {
       let url = `${base}?view=${CONFIG.viewId}&pageSize=100`;
       if (offset) url += `&offset=${offset}`;
       const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${CONFIG.token}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 403 || res.status === 401) {
+          clearToken();
+          showTokenPrompt('Token rejected (403). Please re-enter your Airtable token.');
+          setStatus('err', 'Auth failed');
+          return;
+        }
         throw new Error(err.error?.message || `HTTP ${res.status}`);
       }
       const data = await res.json();
       ALL_RECORDS = ALL_RECORDS.concat(data.records.map(r => r.fields));
       offset = data.offset || null;
+      setStatus('loading', `Loaded ${ALL_RECORDS.length} records…`);
     } while (offset);
 
     setStatus('ok', `${ALL_RECORDS.length.toLocaleString()} records · ${new Date().toLocaleTimeString()}`);
@@ -540,7 +587,30 @@ function showAllVals() {
 }
 
 // ── Boot ──
-loadData();
+if (getToken()) { loadData(); } else { showTokenPrompt(); }
 </script>
+
+<!-- ── TOKEN PROMPT OVERLAY ── -->
+<div id="tokenOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#18181c;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:32px 36px;width:420px;max-width:90vw;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:11px;color:#fff">RE</div>
+      <span style="font-size:15px;font-weight:500;color:#e8e8ed">Resource Explorer</span>
+    </div>
+    <p style="font-size:12px;color:#888894;line-height:1.6">Enter your Airtable Personal Access Token to load the database. It will be saved in your browser — you won't need to enter it again.</p>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label style="font-size:10px;color:#444450;font-family:monospace;text-transform:uppercase;letter-spacing:.06em">Airtable Token</label>
+      <input id="tokenInput" type="password" placeholder="pat..." onkeydown="if(event.key==='Enter')submitToken()"
+        style="background:#222228;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;color:#e8e8ed;font-size:13px;font-family:monospace;outline:none;transition:border .15s"
+        onfocus="this.style.borderColor='#7c6fff'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+      <span id="tokenError" style="display:none;font-size:11px;color:#ff6b6b;font-family:monospace"></span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button onclick="submitToken()" style="flex:1;background:#7c6fff;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Connect</button>
+    </div>
+    <p style="font-size:11px;color:#444450;line-height:1.5">Get a token at <span style="color:#7c6fff">airtable.com/create/tokens</span> — scope: <span style="font-family:monospace;color:#4ecdc4">data.records:read</span></p>
+  </div>
+</div>
+
 </body>
 </html>
