@@ -334,11 +334,15 @@ function clearToken() {
 
 function showTokenPrompt(errorMsg) {
   const overlay = document.getElementById('tokenOverlay');
+  if (!overlay) return;
   const errEl = document.getElementById('tokenError');
-  if (errorMsg) { errEl.textContent = errorMsg; errEl.style.display = 'block'; }
-  else { errEl.style.display = 'none'; }
+  if (errEl) {
+    if (errorMsg) { errEl.textContent = errorMsg; errEl.style.display = 'block'; }
+    else { errEl.style.display = 'none'; }
+  }
   overlay.style.display = 'flex';
-  document.getElementById('tokenInput').focus();
+  const inp = document.getElementById('tokenInput');
+  if (inp) inp.focus();
 }
 
 function hideTokenPrompt() {
@@ -364,7 +368,7 @@ async function loadData() {
 
   setStatus('loading', 'Loading…');
   ALL_RECORDS = [];
-  const base = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent('Master Publication Database')}`;
+  const base = `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.tableId}`;
   let offset = null;
   try {
     do {
