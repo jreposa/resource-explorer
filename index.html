@@ -7,27 +7,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ── CONFIG ── edit these three lines ── */
-:root {
-  --token: "";   /* paste your Airtable token here if needed */
-}
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0f0f11;
-  --surface:   #18181c;
-  --surface2:  #222228;
-  --border:    rgba(255,255,255,.08);
-  --border2:   rgba(255,255,255,.14);
-  --text:      #e8e8ed;
-  --muted:     #888894;
-  --faint:     #444450;
-  --accent:    #7c6fff;
-  --accent2:   #4ecdc4;
-  --accent3:   #ff6b6b;
-  --amber:     #f0a500;
-  --green:     #4ade80;
+  --bg:        #f5f5f7;
+  --surface:   #ffffff;
+  --surface2:  #f0f0f3;
+  --border:    rgba(0,0,0,.08);
+  --border2:   rgba(0,0,0,.14);
+  --text:      #1a1a1f;
+  --muted:     #666670;
+  --faint:     #aaaabc;
+  --accent:    #5b50e8;
+  --accent2:   #0ea896;
+  --accent3:   #e84444;
+  --amber:     #d97706;
+  --green:     #16a34a;
   --radius:    8px;
   --radius-lg: 12px;
 }
@@ -43,316 +38,357 @@ body {
 
 /* ── HEADER ── */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--surface); position: sticky; top: 0; z-index: 10;
 }
-.header-left { display: flex; align-items: center; gap: 12px; }
+.header-left { display: flex; align-items: center; gap: 10px; }
 .logo {
-  width: 28px; height: 28px; border-radius: 6px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  width: 26px; height: 26px; border-radius: 6px;
+  background: var(--accent);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: #fff;
+  font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; color: #fff;
 }
-.header h1 { font-size: 14px; font-weight: 500; color: var(--text); }
+.header h1 { font-size: 13px; font-weight: 500; color: var(--text); }
+.header-right { display: flex; align-items: center; gap: 8px; }
 .header-meta { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
-.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
 .status-dot.loading { background: var(--amber); animation: pulse 1s infinite; }
 .status-dot.ok { background: var(--green); }
 .status-dot.err { background: var(--accent3); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-.refresh-btn {
+.hdr-btn {
   font-size: 11px; font-family: 'DM Mono', monospace;
-  padding: 5px 12px; border-radius: var(--radius);
+  padding: 4px 10px; border-radius: var(--radius);
   border: 1px solid var(--border2); background: none;
   color: var(--muted); cursor: pointer; transition: all .15s;
 }
-.refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+.hdr-btn:hover { color: var(--text); border-color: var(--accent); }
+.hdr-btn.danger { border-color: rgba(232,68,68,.25); color: var(--accent3); }
+.hdr-btn.danger:hover { border-color: var(--accent3); }
 
 /* ── LAYOUT ── */
-.app { display: grid; grid-template-columns: 200px 1fr; height: calc(100vh - 53px); }
+.app { display: grid; grid-template-columns: 210px 1fr; height: calc(100vh - 49px); }
 
 /* ── SIDEBAR ── */
 .sidebar {
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
-  background: var(--surface);
-  overflow: hidden;
+  background: var(--surface); overflow: hidden;
 }
-.sidebar-search {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-}
+.sidebar-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .sidebar-search input {
   width: 100%; background: var(--surface2);
   border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 6px 10px; color: var(--text); font-size: 12px;
+  padding: 5px 9px; color: var(--text); font-size: 12px;
   font-family: 'DM Sans', sans-serif; outline: none;
 }
 .sidebar-search input:focus { border-color: var(--accent); }
 .sidebar-search input::placeholder { color: var(--faint); }
-
-.field-groups { overflow-y: auto; flex: 1; padding: 8px 0 16px; }
+.field-groups { overflow-y: auto; flex: 1; padding: 6px 0 16px; }
 .field-group-label {
   font-size: 9px; font-weight: 500; letter-spacing: .1em;
   text-transform: uppercase; color: var(--faint);
-  padding: 12px 14px 4px; font-family: 'DM Mono', monospace;
+  padding: 10px 14px 3px; font-family: 'DM Mono', monospace;
 }
 .field-btn {
   width: 100%; text-align: left; background: none;
-  border: none; padding: 6px 14px; cursor: pointer;
+  border: none; padding: 5px 14px; cursor: pointer;
   color: var(--muted); font-size: 12px;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 7px;
   transition: color .1s; position: relative;
 }
-.field-btn:hover { color: var(--text); }
-.field-btn.active {
-  color: var(--text); background: rgba(124,111,255,.12);
-}
+.field-btn:hover { color: var(--text); background: var(--surface2); }
+.field-btn.active { color: var(--accent); background: rgba(91,80,232,.06); }
 .field-btn.active::before {
-  content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
   width: 2px; border-radius: 0 2px 2px 0; background: var(--accent);
 }
 .f-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .f-badge {
   margin-left: auto; font-size: 9px; font-family: 'DM Mono', monospace;
   color: var(--faint); background: var(--surface2);
-  padding: 1px 5px; border-radius: 4px;
+  padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border);
 }
-.field-btn.active .f-badge { color: var(--accent); background: rgba(124,111,255,.15); }
+.field-btn.active .f-badge { color: var(--accent); background: rgba(91,80,232,.08); border-color: rgba(91,80,232,.2); }
 
-/* ── MAIN ── */
-.main { overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+/* ── MAIN PANEL ── */
+.main-wrap { display: flex; flex-direction: column; overflow: hidden; }
+.main-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--surface); padding: 0 20px;
+}
+.tab-btn {
+  font-size: 12.5px; padding: 10px 14px; cursor: pointer;
+  color: var(--muted); border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .1s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+.main { overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
 
 /* ── INTRO ── */
 .intro-state {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 300px; gap: 12px; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 300px; gap: 10px; text-align: center;
 }
-.intro-icon { font-size: 32px; opacity: .2; }
+.intro-icon { font-size: 28px; opacity: .15; }
 .intro-title { font-size: 14px; color: var(--muted); }
-.intro-sub { font-size: 12px; color: var(--faint); max-width: 280px; line-height: 1.6; }
+.intro-sub { font-size: 12px; color: var(--faint); max-width: 260px; line-height: 1.6; }
 
 /* ── FIELD HEADER ── */
-.field-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.field-title {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 16px; font-weight: 500;
-}
-.multi-tag {
-  font-size: 9px; font-family: 'DM Mono', monospace;
-  padding: 2px 7px; border-radius: 4px;
-  background: rgba(240,165,0,.12); color: var(--amber);
-  font-weight: 500; letter-spacing: .04em;
-}
-.text-tag {
-  font-size: 9px; font-family: 'DM Mono', monospace;
-  padding: 2px 7px; border-radius: 4px;
-  background: rgba(78,205,196,.1); color: var(--accent2);
-  font-weight: 500;
-}
+.field-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
 .field-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tag {
+  font-size: 9px; font-family: 'DM Mono', monospace; font-weight: 500;
+  padding: 2px 6px; border-radius: 4px; letter-spacing: .04em;
+}
+.tag-multi { background: rgba(217,119,6,.1); color: var(--amber); }
+.tag-text  { background: rgba(14,168,150,.1); color: var(--accent2); }
+.tag-combo { background: rgba(91,80,232,.1); color: var(--accent); }
 
 /* ── STAT CARDS ── */
-.stats-row { display: flex; gap: 10px; }
+.stats-row { display: flex; gap: 8px; }
 .stat-card {
   flex: 1; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 12px 16px;
+  border-radius: var(--radius-lg); padding: 10px 14px;
 }
-.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
-.stat-val { font-size: 22px; font-weight: 300; color: var(--text); font-family: 'DM Mono', monospace; }
-.stat-val span { font-size: 12px; color: var(--muted); margin-left: 3px; }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-family: 'DM Mono', monospace; margin-bottom: 3px; }
+.stat-val { font-size: 20px; font-weight: 400; color: var(--text); font-family: 'DM Mono', monospace; }
+.stat-val small { font-size: 11px; color: var(--muted); margin-left: 2px; }
 
-/* ── COVERAGE BAR ── */
+/* ── COVERAGE ── */
 .coverage-wrap { display: flex; align-items: center; gap: 10px; }
-.coverage-track {
-  flex: 1; height: 4px; background: var(--surface2);
-  border-radius: 2px; overflow: hidden;
-}
-.coverage-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
-.coverage-label { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); flex: 0 0 36px; text-align: right; }
+.coverage-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.coverage-fill { height: 100%; border-radius: 2px; }
+.coverage-label { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); flex: 0 0 32px; text-align: right; }
 
-/* ── VALUE BARS ── */
+/* ── SECTION LABEL ── */
 .section-label {
   font-size: 10px; font-weight: 500; letter-spacing: .08em;
   text-transform: uppercase; color: var(--faint);
   font-family: 'DM Mono', monospace; margin-bottom: 10px;
 }
-.bar-list { display: flex; flex-direction: column; gap: 5px; }
+
+/* ── BAR LIST ── */
+.bar-list { display: flex; flex-direction: column; gap: 4px; }
 .bar-row { display: flex; align-items: center; gap: 10px; }
 .bar-label {
-  font-size: 12px; color: var(--muted); flex: 0 0 200px;
+  font-size: 12px; color: var(--muted); flex: 0 0 210px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   transition: color .1s;
 }
 .bar-row:hover .bar-label { color: var(--text); }
-.bar-track {
-  flex: 1; height: 8px; background: var(--surface2);
-  border-radius: 4px; overflow: hidden; cursor: default;
-}
-.bar-fill { height: 100%; border-radius: 4px; transition: width .35s ease; }
-.bar-count {
-  font-size: 11px; font-family: 'DM Mono', monospace;
-  color: var(--faint); flex: 0 0 36px; text-align: right;
-}
+.bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-count { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--faint); flex: 0 0 32px; text-align: right; }
 .show-more-btn {
   font-size: 11px; color: var(--accent); background: none;
-  border: none; cursor: pointer; padding: 6px 0;
-  font-family: 'DM Mono', monospace; opacity: .7;
+  border: none; cursor: pointer; padding: 8px 0;
+  font-family: 'DM Mono', monospace; opacity: .8;
 }
 .show-more-btn:hover { opacity: 1; }
 
-/* ── TEXT FIELD ── */
-.text-field-box {
+/* ── SAMPLE BOX (text fields) ── */
+.sample-box {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 16px 20px;
-  font-size: 12px; color: var(--muted); line-height: 1.7;
+  border-radius: var(--radius-lg); overflow: hidden;
 }
-.text-field-box .sample-title {
-  font-size: 12px; font-weight: 500; color: var(--text);
-  margin-bottom: 4px;
+.sample-item {
+  font-size: 12px; color: var(--muted); line-height: 1.6;
+  padding: 9px 14px; border-bottom: 1px solid var(--border);
 }
-.sample-item { border-bottom: 1px solid var(--border); padding: 8px 0; }
 .sample-item:last-child { border-bottom: none; }
 
-/* ── LOADING ── */
-.loading-wrap {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 300px; flex-direction: column; gap: 12px;
+/* ── CHART ── */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── RELATED CHIPS ── */
+.related-note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 12px; padding: 4px 10px;
+  border-radius: var(--radius); border: 1px solid var(--border2);
+  color: var(--muted); background: var(--surface); cursor: default;
+  display: flex; align-items: center; gap: 5px;
 }
-.spinner {
-  width: 24px; height: 24px; border-radius: 50%;
-  border: 2px solid var(--surface2); border-top-color: var(--accent);
-  animation: spin .6s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+
+/* ── TOKEN OVERLAY ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); z-index: 999;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.overlay-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 28px 32px; width: 400px; max-width: 90vw;
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+}
+.overlay-title { font-size: 14px; font-weight: 500; }
+.overlay-sub { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.overlay-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 9px 12px; color: var(--text);
+  font-size: 13px; font-family: 'DM Mono', monospace; outline: none;
+}
+.overlay-input:focus { border-color: var(--accent); }
+.overlay-error { font-size: 11px; color: var(--accent3); font-family: 'DM Mono', monospace; display: none; }
+.overlay-btn {
+  background: var(--accent); border: none; border-radius: var(--radius);
+  padding: 9px; color: #fff; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: opacity .15s;
+}
+.overlay-btn:hover { opacity: .85; }
+.overlay-hint { font-size: 11px; color: var(--faint); line-height: 1.5; }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════
-     CONFIG — edit these values
-     ════════════════════════════════ -->
-<script>
-const CONFIG = {
-  baseId:  'appajgKVCtfHwvgfi',
-  tableId: 'tblAgyvQzBAqF72ae',
-  viewId:  'viwVgPBdatwEXo3ub',
-};
-
-// Field definitions — type: 'categorical' | 'multi' | 'text' | 'year'
-// multi = comma/semicolon separated values in one cell
-// text  = free text, show samples + coverage only
-const FIELD_DEFS = [
-  { key: 'Title',                   label: 'Title',                   type: 'text',        color: '#888894', group: 'Content' },
-  { key: 'Abstract / Summary',      label: 'Abstract / Summary',      type: 'text',        color: '#888894', group: 'Content' },
-  { key: 'Author(s)',               label: 'Author(s)',               type: 'text',        color: '#9b8ff5', group: 'Content' },
-  { key: 'Publication Year',        label: 'Publication Year',        type: 'year',        color: '#f0a500', group: 'Content' },
-  { key: 'Area of Emphasis',        label: 'Area of Emphasis',        type: 'categorical', color: '#7c6fff', group: 'Taxonomy' },
-  { key: 'Category',                label: 'Category',                type: 'categorical', color: '#4ecdc4', group: 'Taxonomy' },
-  { key: 'Subcategory',             label: 'Subcategory',             type: 'categorical', color: '#4ecdc4', group: 'Taxonomy' },
-  { key: 'Promising Practices',     label: 'Promising Practices',     type: 'categorical', color: '#4ade80', group: 'Taxonomy' },
-  { key: 'Keywords / Tags',         label: 'Keywords / Tags',         type: 'multi',       color: '#ff6b9d', group: 'Taxonomy' },
-  { key: 'Media Type',              label: 'Media Type',              type: 'categorical', color: '#ff6b6b', group: 'Format' },
-  { key: 'Publication Type',        label: 'Publication Type',        type: 'categorical', color: '#ff6b6b', group: 'Format' },
-  { key: 'URL / Link to Content',   label: 'URL / Link to Content',   type: 'text',        color: '#888894', group: 'Format' },
-  { key: 'Resource Link',           label: 'Resource Link',           type: 'text',        color: '#888894', group: 'Format' },
-  { key: 'Attachment(s)',           label: 'Attachment(s)',           type: 'text',        color: '#888894', group: 'Format' },
-  { key: 'Intended Audience',       label: 'Intended Audience',       type: 'multi',       color: '#ff9f43', group: 'Audience & Scope' },
-  { key: 'Language',                label: 'Language',                type: 'categorical', color: '#888894', group: 'Audience & Scope' },
-  { key: 'Geographic Scope',        label: 'Geographic Scope',        type: 'multi',       color: '#378ADD', group: 'Audience & Scope' },
-  { key: 'Project',                 label: 'Project',                 type: 'categorical', color: '#4ade80', group: 'Source & Admin' },
-  { key: 'Source System',           label: 'Source System',           type: 'categorical', color: '#f0a500', group: 'Source & Admin' },
-  { key: 'Date Added',              label: 'Date Added',              type: 'text',        color: '#888894', group: 'Source & Admin' },
-  { key: 'Status',                  label: 'Status',                  type: 'categorical', color: '#888894', group: 'Source & Admin' },
-  { key: 'Duplicate Flag',          label: 'Duplicate Flag',          type: 'categorical', color: '#888894', group: 'Source & Admin' },
-];
-
-const GROUPS = ['Content', 'Taxonomy', 'Format', 'Audience & Scope', 'Source & Admin'];
-</script>
-
-<!-- ════ HTML ════ -->
 <div class="header">
   <div class="header-left">
     <div class="logo">RE</div>
     <h1>Resource Explorer</h1>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span class="header-meta" id="statusLine">
+  <div class="header-right">
+    <span class="header-meta">
       <span class="status-dot loading" id="statusDot"></span>
       <span id="statusText">Loading…</span>
     </span>
-    <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
-    <button class="refresh-btn" onclick="clearToken();showTokenPrompt()" style="border-color:rgba(255,107,107,.3);color:#ff6b6b">⚙ Token</button>
+    <button class="hdr-btn" onclick="loadData()">↺ Refresh</button>
+    <button class="hdr-btn danger" onclick="clearToken();showTokenPrompt()">⚙ Token</button>
   </div>
 </div>
 
 <div class="app">
   <div class="sidebar">
     <div class="sidebar-search">
-      <input type="text" placeholder="Search fields…" oninput="filterFields(this.value)" id="fieldSearch">
+      <input type="text" placeholder="Search fields…" oninput="filterFields(this.value)">
     </div>
     <div class="field-groups" id="fieldGroups"></div>
   </div>
-  <div class="main" id="main">
-    <div class="intro-state">
-      <div class="intro-icon">◈</div>
-      <div class="intro-title">Select a field to explore</div>
-      <div class="intro-sub">Fetching records from Airtable — choose any field from the sidebar once loaded.</div>
+
+  <div class="main-wrap">
+    <div class="main-tabs" id="mainTabs" style="display:none">
+      <button class="tab-btn active" onclick="switchTab('values',this)">Values</button>
+      <button class="tab-btn" onclick="switchTab('chart',this)">Chart</button>
+      <button class="tab-btn" onclick="switchTab('related',this)">Related fields</button>
+    </div>
+    <div class="main" id="main">
+      <div class="intro-state">
+        <div class="intro-icon">◈</div>
+        <div class="intro-title">Select a field to explore</div>
+        <div class="intro-sub">Choose any field from the sidebar once records have loaded.</div>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- TOKEN OVERLAY -->
+<div class="overlay" id="tokenOverlay">
+  <div class="overlay-box">
+    <div class="overlay-title">Connect to Airtable</div>
+    <p class="overlay-sub">Enter your Airtable Personal Access Token. It will be saved in your browser — you won't need to enter it again.</p>
+    <input class="overlay-input" id="tokenInput" type="password" placeholder="pat..."
+      onkeydown="if(event.key==='Enter')submitToken()">
+    <span class="overlay-error" id="tokenError"></span>
+    <button class="overlay-btn" onclick="submitToken()">Connect →</button>
+    <p class="overlay-hint">Get a token at airtable.com/create/tokens — scope: data.records:read</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ── State ──
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+const CONFIG = {
+  baseId:  'appajgKVCtfHwvgfi',
+  tableId: 'tblAgyvQzBAqF72ae',
+  viewId:  'viwVgPBdatwEXo3ub',
+};
+
+// type:
+//   'categorical' — one value per record, shown as-is
+//   'combo'       — multiple values per cell treated as ONE combined value (e.g. "Policymakers,Researchers")
+//   'multi'       — split on comma/semicolon into individual values (e.g. Keywords)
+//   'text'        — free text, show samples only
+//   'year'        — numeric year, sorted descending
+const FIELD_DEFS = [
+  { key: 'Title',                 label: 'Title',                 type: 'text',        color: '#888894', group: 'Content' },
+  { key: 'Abstract / Summary',   label: 'Abstract / Summary',    type: 'text',        color: '#888894', group: 'Content' },
+  { key: 'Author(s)',             label: 'Author(s)',             type: 'text',        color: '#9b8ff5', group: 'Content' },
+  { key: 'Publication Year',     label: 'Publication Year',      type: 'year',        color: '#d97706', group: 'Content' },
+  { key: 'Area of Emphasis',     label: 'Area of Emphasis',      type: 'categorical', color: '#5b50e8', group: 'Taxonomy' },
+  { key: 'Category',             label: 'Category',              type: 'categorical', color: '#0ea896', group: 'Taxonomy' },
+  { key: 'Subcategory',          label: 'Subcategory',           type: 'categorical', color: '#0ea896', group: 'Taxonomy' },
+  { key: 'Keywords / Tags',      label: 'Keywords / Tags',       type: 'multi',       color: '#c026d3', group: 'Taxonomy' },
+  { key: 'Media Type',           label: 'Media Type',            type: 'categorical', color: '#ea580c', group: 'Format' },
+  { key: 'Publication Type',     label: 'Publication Type',      type: 'categorical', color: '#ea580c', group: 'Format' },
+  { key: 'Intended Audience',    label: 'Intended Audience',     type: 'combo',       color: '#db6b1e', group: 'Audience & Scope' },
+  { key: 'Language',             label: 'Language',              type: 'categorical', color: '#888894', group: 'Audience & Scope' },
+  { key: 'Geographic Scope',     label: 'Geographic Scope',      type: 'multi',       color: '#2563eb', group: 'Audience & Scope' },
+  { key: 'Project',              label: 'Project',               type: 'categorical', color: '#16a34a', group: 'Source & Admin' },
+  { key: 'Source System',        label: 'Source System',         type: 'categorical', color: '#d97706', group: 'Source & Admin' },
+  { key: 'Date Added',           label: 'Date Added',            type: 'text',        color: '#888894', group: 'Source & Admin' },
+  { key: 'Status',               label: 'Status',                type: 'categorical', color: '#888894', group: 'Source & Admin' },
+  { key: 'Duplicate Flag',       label: 'Duplicate Flag',        type: 'categorical', color: '#888894', group: 'Source & Admin' },
+];
+const GROUPS = ['Content', 'Taxonomy', 'Format', 'Audience & Scope', 'Source & Admin'];
+
+const RELATED = {
+  'Area of Emphasis':    ['Category', 'Source System', 'Geographic Scope', 'Project'],
+  'Category':            ['Area of Emphasis', 'Subcategory', 'Promising Practices', 'Source System'],
+  'Subcategory':         ['Category', 'Area of Emphasis', 'Keywords / Tags'],
+  'Keywords / Tags':     ['Category', 'Subcategory', 'Area of Emphasis'],
+  'Media Type':          ['Publication Type', 'Source System', 'Area of Emphasis'],
+  'Publication Type':    ['Media Type', 'Area of Emphasis', 'Intended Audience'],
+  'Publication Year':    ['Source System', 'Area of Emphasis', 'Geographic Scope'],
+  'Source System':       ['Area of Emphasis', 'Project', 'Publication Year'],
+  'Status':              ['Source System', 'Duplicate Flag'],
+  'Duplicate Flag':      ['Status', 'Source System'],
+  'Project':             ['Area of Emphasis', 'Category', 'Source System'],
+  'Intended Audience':   ['Area of Emphasis', 'Category', 'Publication Type'],
+  'Language':            ['Geographic Scope', 'Area of Emphasis'],
+  'Geographic Scope':    ['Area of Emphasis', 'Source System', 'Publication Year'],
+};
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
 let ALL_RECORDS = [];
 let activeField = null;
-let showAll = false;
+let activeTab   = 'values';
+let showAll     = false;
+let chartInst   = null;
 
-// ── Token management ──
-function getToken() {
-  return localStorage.getItem('airtable_token_' + CONFIG.baseId);
-}
-function saveToken(t) {
-  localStorage.setItem('airtable_token_' + CONFIG.baseId, t.trim());
-}
-function clearToken() {
-  localStorage.removeItem('airtable_token_' + CONFIG.baseId);
-}
+// ══════════════════════════════════════
+// TOKEN
+// ══════════════════════════════════════
+function getToken()   { return localStorage.getItem('re_token_' + CONFIG.baseId); }
+function saveToken(t) { localStorage.setItem('re_token_' + CONFIG.baseId, t.trim()); }
+function clearToken() { localStorage.removeItem('re_token_' + CONFIG.baseId); }
 
-function showTokenPrompt(errorMsg) {
-  const overlay = document.getElementById('tokenOverlay');
-  if (!overlay) return;
-  const errEl = document.getElementById('tokenError');
-  if (errEl) {
-    if (errorMsg) { errEl.textContent = errorMsg; errEl.style.display = 'block'; }
-    else { errEl.style.display = 'none'; }
-  }
-  overlay.style.display = 'flex';
-  const inp = document.getElementById('tokenInput');
-  if (inp) inp.focus();
+function showTokenPrompt(msg) {
+  const el = document.getElementById('tokenError');
+  el.textContent = msg || '';
+  el.style.display = msg ? 'block' : 'none';
+  document.getElementById('tokenOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('tokenInput').focus(), 50);
 }
-
-function hideTokenPrompt() {
-  document.getElementById('tokenOverlay').style.display = 'none';
-}
+function hideTokenPrompt() { document.getElementById('tokenOverlay').style.display = 'none'; }
 
 function submitToken() {
   const val = document.getElementById('tokenInput').value.trim();
   if (!val.startsWith('pat')) {
-    document.getElementById('tokenError').textContent = 'Token should start with "pat" — check you copied the full key.';
+    document.getElementById('tokenError').textContent = 'Token should start with "pat"';
     document.getElementById('tokenError').style.display = 'block';
     return;
   }
@@ -361,11 +397,12 @@ function submitToken() {
   loadData();
 }
 
-// ── Airtable fetch (paginated) ──
+// ══════════════════════════════════════
+// FETCH
+// ══════════════════════════════════════
 async function loadData() {
   const token = getToken();
   if (!token) { showTokenPrompt(); return; }
-
   setStatus('loading', 'Loading…');
   ALL_RECORDS = [];
   const base = `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.tableId}`;
@@ -374,14 +411,12 @@ async function loadData() {
     do {
       let url = `${base}?view=${CONFIG.viewId}&pageSize=100`;
       if (offset) url += `&offset=${offset}`;
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         if (res.status === 403 || res.status === 401) {
           clearToken();
-          showTokenPrompt('Token rejected (403). Please re-enter your Airtable token.');
+          showTokenPrompt('Token rejected — please re-enter your Airtable token.');
           setStatus('err', 'Auth failed');
           return;
         }
@@ -390,24 +425,24 @@ async function loadData() {
       const data = await res.json();
       ALL_RECORDS = ALL_RECORDS.concat(data.records.map(r => r.fields));
       offset = data.offset || null;
-      setStatus('loading', `Loaded ${ALL_RECORDS.length} records…`);
+      setStatus('loading', `Loaded ${ALL_RECORDS.length}…`);
     } while (offset);
-
     setStatus('ok', `${ALL_RECORDS.length.toLocaleString()} records · ${new Date().toLocaleTimeString()}`);
     buildSidebar();
-    if (activeField) renderField(activeField);
+    if (activeField) renderPanel();
   } catch (e) {
     setStatus('err', `Error: ${e.message}`);
   }
 }
 
 function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  dot.className = `status-dot ${state}`;
+  document.getElementById('statusDot').className = `status-dot ${state}`;
   document.getElementById('statusText').textContent = text;
 }
 
-// ── Sidebar ──
+// ══════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════
 function buildSidebar() {
   const container = document.getElementById('fieldGroups');
   container.innerHTML = '';
@@ -422,7 +457,7 @@ function buildSidebar() {
       btn.dataset.key = fd.key;
       btn.innerHTML = `<span class="f-dot" style="background:${fd.color}"></span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fd.label}</span>
-        <span class="f-badge">${vals.length || '—'}</span>`;
+        <span class="f-badge">${vals.length || (fd.type === 'text' ? '—' : '0')}</span>`;
       btn.onclick = () => selectField(fd.key);
       grpEl.appendChild(btn);
     });
@@ -437,24 +472,30 @@ function filterFields(q) {
   document.querySelectorAll('.field-group-label').forEach(l => l.style.display = q ? 'none' : '');
 }
 
-// ── Data helpers ──
+// ══════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════
 function getValues(fd) {
   if (fd.type === 'text') return [];
   const counts = {};
   ALL_RECORDS.forEach(r => {
     const raw = r[fd.key];
-    if (!raw && raw !== 0) return;
+    if (raw === undefined || raw === null || String(raw).trim() === '') return;
     const str = String(raw).trim();
-    if (!str) return;
     let vals;
     if (fd.type === 'multi') {
+      // split into individual tokens
       vals = str.split(/[,;]+/).map(v => v.trim()).filter(Boolean);
     } else {
+      // 'categorical', 'combo', 'year' — keep whole string as one value
       vals = [str];
     }
     vals.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
   });
-  return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return fd.type === 'year'
+    ? sorted.sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+    : sorted;
 }
 
 function getFilled(fd) {
@@ -464,157 +505,242 @@ function getFilled(fd) {
   }).length;
 }
 
-function getSamples(fd, n = 5) {
+function getSamples(fd, n = 6) {
   return ALL_RECORDS
     .filter(r => r[fd.key] && String(r[fd.key]).trim())
     .slice(0, n)
-    .map(r => String(r[fd.key]).slice(0, 140));
+    .map(r => String(r[fd.key]).slice(0, 160));
 }
 
-// ── Field render ──
+// ══════════════════════════════════════
+// TABS
+// ══════════════════════════════════════
 function selectField(key) {
   activeField = key;
   showAll = false;
   document.querySelectorAll('.field-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
-  renderField(key);
+  const fd = FIELD_DEFS.find(f => f.key === key);
+  const isText = fd.type === 'text';
+  // show/hide tabs — text fields only get Values tab
+  document.getElementById('mainTabs').style.display = 'flex';
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.style.display = (isText && i > 0) ? 'none' : '';
+  });
+  if (isText) { activeTab = 'values'; document.querySelectorAll('.tab-btn')[0].classList.add('active'); }
+  renderPanel();
 }
 
-function renderField(key) {
-  const fd = FIELD_DEFS.find(f => f.key === key);
-  if (!fd || !ALL_RECORDS.length) return;
+function switchTab(name, el) {
+  activeTab = name;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderPanel();
+}
 
-  const total = ALL_RECORDS.length;
+function renderPanel() {
+  if (!activeField) return;
+  if (activeTab === 'values')  renderValues();
+  else if (activeTab === 'chart')   renderChart();
+  else if (activeTab === 'related') renderRelated();
+}
+
+// ══════════════════════════════════════
+// VALUES TAB
+// ══════════════════════════════════════
+function renderValues() {
+  const fd = FIELD_DEFS.find(f => f.key === activeField);
+  if (!fd) return;
+  const total  = ALL_RECORDS.length;
   const filled = getFilled(fd);
-  const pct = Math.round(filled / total * 100);
-
+  const pct    = Math.round(filled / total * 100);
   const isText = fd.type === 'text';
-  const isYear = fd.type === 'year';
-  const isMulti = fd.type === 'multi';
+  const isMulti  = fd.type === 'multi';
+  const isCombo  = fd.type === 'combo';
+
+  let tagHtml = '';
+  if (isMulti)  tagHtml = '<span class="tag tag-multi">SPLIT MULTI-VALUE</span>';
+  if (isCombo)  tagHtml = '<span class="tag tag-combo">COMBINED VALUES</span>';
+  if (isText)   tagHtml = '<span class="tag tag-text">FREE TEXT</span>';
 
   let html = `
-    <div class="field-header">
-      <div>
-        <div class="field-title">
-          <span class="f-dot" style="background:${fd.color};width:10px;height:10px"></span>
-          ${fd.label}
-          ${isMulti ? '<span class="multi-tag">MULTI-VALUE</span>' : ''}
-          ${isText ? '<span class="text-tag">FREE TEXT</span>' : ''}
-        </div>
-        <div class="field-sub">${fd.group}</div>
+    <div>
+      <div class="field-title">
+        <span class="f-dot" style="background:${fd.color};width:10px;height:10px;border-radius:50%"></span>
+        ${fd.label} ${tagHtml}
       </div>
+      <div class="field-sub">${fd.group}</div>
     </div>
-
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Total records</div>
-        <div class="stat-val">${total.toLocaleString()}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Filled</div>
-        <div class="stat-val">${filled.toLocaleString()}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Coverage</div>
-        <div class="stat-val">${pct}<span>%</span></div>
-      </div>
-      ${!isText ? `<div class="stat-card">
-        <div class="stat-label">Unique values</div>
-        <div class="stat-val" id="uniqueCount">—</div>
-      </div>` : ''}
+      <div class="stat-card"><div class="stat-label">Total records</div><div class="stat-val">${total.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Filled</div><div class="stat-val">${filled.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Coverage</div><div class="stat-val">${pct}<small>%</small></div></div>
+      ${!isText ? `<div class="stat-card"><div class="stat-label">Unique values</div><div class="stat-val" id="ucount">—</div></div>` : ''}
     </div>
-
     <div>
       <div class="section-label">Coverage</div>
       <div class="coverage-wrap">
-        <div class="coverage-track">
-          <div class="coverage-fill" style="width:${pct}%;background:${fd.color}"></div>
-        </div>
+        <div class="coverage-track"><div class="coverage-fill" style="width:${pct}%;background:${fd.color}"></div></div>
         <div class="coverage-label">${pct}%</div>
       </div>
-    </div>
-  `;
+    </div>`;
 
   if (isText) {
-    const samples = getSamples(fd, 6);
-    html += `
-      <div>
-        <div class="section-label">Sample values</div>
-        <div class="text-field-box">
-          ${samples.length ? samples.map(s =>
-            `<div class="sample-item">${s.replace(/</g,'&lt;')}</div>`
-          ).join('') : '<span style="color:var(--faint)">No values found</span>'}
-        </div>
-      </div>`;
+    const samples = getSamples(fd);
+    html += `<div><div class="section-label">Sample values</div>
+      <div class="sample-box">${samples.length
+        ? samples.map(s => `<div class="sample-item">${s.replace(/</g,'&lt;')}</div>`).join('')
+        : '<div class="sample-item" style="color:var(--faint)">No values found</div>'}
+      </div></div>`;
   } else {
-    const vals = isYear
-      ? getValues(fd).sort((a,b) => parseInt(b[0]) - parseInt(a[0]))
-      : getValues(fd);
-
-    const unique = vals.length;
+    const vals    = getValues(fd);
+    const unique  = vals.length;
     const display = showAll ? vals : vals.slice(0, 20);
-    const maxCount = vals[0]?.[1] || 1;
+    const maxC    = vals[0]?.[1] || 1;
 
-    html += `<div id="barsSection">
-      <div class="section-label">Value distribution <span style="color:var(--faint)">(${unique} unique)</span></div>
+    if (isCombo) {
+      html += `<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:2px 0 8px">
+        Each bar represents one combination of audiences as entered in Airtable (e.g. "Policymakers, Researchers, Practitioners" is one value).
+      </div>`;
+    }
+    if (isMulti) {
+      html += `<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:2px 0 8px">
+        Values are split by comma/semicolon — each individual term is counted separately.
+      </div>`;
+    }
+
+    html += `<div><div class="section-label">Value distribution <span style="color:var(--faint);font-weight:400">(${unique} unique)</span></div>
       <div class="bar-list">`;
-
     display.forEach(([v, c]) => {
-      const w = Math.round(c / maxCount * 100);
+      const w = Math.round(c / maxC * 100);
       html += `<div class="bar-row">
         <div class="bar-label" title="${v.replace(/"/g,'&quot;')}">${v.replace(/</g,'&lt;')}</div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${w}%;background:${fd.color}"></div>
-        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${fd.color}"></div></div>
         <div class="bar-count">${c}</div>
       </div>`;
     });
-
     html += `</div>`;
-    if (!showAll && vals.length > 20) {
-      html += `<button class="show-more-btn" onclick="showAllVals()">Show all ${vals.length} values ↓</button>`;
-    }
+    if (!showAll && vals.length > 20)
+      html += `<button class="show-more-btn" onclick="showAll=true;renderPanel()">Show all ${vals.length} values ↓</button>`;
     html += `</div>`;
-
-    // set unique count after render
-    setTimeout(() => {
-      const el = document.getElementById('uniqueCount');
-      if (el) el.textContent = unique.toLocaleString();
-    }, 0);
+    setTimeout(() => { const el = document.getElementById('ucount'); if (el) el.textContent = unique.toLocaleString(); }, 0);
   }
 
   document.getElementById('main').innerHTML = html;
 }
 
-function showAllVals() {
-  showAll = true;
-  renderField(activeField);
+// ══════════════════════════════════════
+// CHART TAB
+// ══════════════════════════════════════
+function renderChart() {
+  const fd   = FIELD_DEFS.find(f => f.key === activeField);
+  if (!fd) return;
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+
+  const vals  = getValues(fd).slice(0, 20);
+  const isYear = fd.type === 'year';
+  const labels = vals.map(([v]) => v.length > 18 ? v.slice(0,16)+'…' : v);
+  const counts = vals.map(([,c]) => c);
+  const barH   = isYear ? 220 : Math.max(220, vals.length * 30 + 60);
+
+  document.getElementById('main').innerHTML = `
+    <div>
+      <div class="field-title">
+        <span class="f-dot" style="background:${fd.color};width:10px;height:10px;border-radius:50%"></span>
+        ${fd.label}
+      </div>
+      <div class="field-sub">Top ${vals.length} values by record count</div>
+    </div>
+    <div class="chart-wrap" style="height:${barH}px">
+      <canvas id="fieldChart" role="img" aria-label="Bar chart of ${fd.label} value distribution">
+        ${vals.map(([v,c])=>`${v}: ${c}`).join(', ')}
+      </canvas>
+    </div>`;
+
+  const ctx = document.getElementById('fieldChart');
+  chartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Records', data: counts, backgroundColor: fd.color + 'cc', borderColor: fd.color, borderWidth: 0.5, borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: isYear ? 'x' : 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed[isYear?'y':'x']} records` } } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { color: '#888', font: { size: 11 }, maxRotation: isYear ? 45 : 0 } },
+        y: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { color: '#888', font: { size: 11 } } }
+      }
+    }
+  });
 }
 
-// ── Boot ──
+// ══════════════════════════════════════
+// RELATED TAB
+// ══════════════════════════════════════
+function renderRelated() {
+  const fd   = FIELD_DEFS.find(f => f.key === activeField);
+  if (!fd) return;
+  const rels = RELATED[fd.key] || [];
+
+  const NOTES = {
+    'Area of Emphasis':    'Top-level split: Education (50%), Employment (41%), Healthcare (<1%). Nearly every Category maps exclusively to one Area.',
+    'Category':            '23 categories, each belonging exclusively to either Education or Employment. Systems Change, Transition, and Program Operations are the top three.',
+    'Subcategory':         '53 unique values at ~41% fill rate. Each Subcategory maps 1:1 to a Category. State Legislation and Student Outcomes lead.',
+    'Source System':       '5 sources. Think College = Education only. ThinkWork = Employment only. Old ICI Site and ScholarWorks span both.',
+    'Geographic Scope':    '81% of records are National. State-level resources are sparse — Minnesota and Massachusetts lead among individual states.',
+    'Publication Year':    'Peak publishing in 2021. Strong growth from 2012 onward. ~45% of records have no year filled in.',
+    'Keywords / Tags':     '77% fill rate. Split into individual terms — records often have several tags. "Access to Integrated Employment" is the most common.',
+    'Intended Audience':   '20% fill rate. Values are kept as combined entries (e.g. "Policymakers, Researchers, Practitioners") to preserve meaning.',
+    'Promising Practices': 'Only 4% fill rate — applies to a subset of Employment-area resources only.',
+    'Project':             '40% fill rate. National Coordinating Center alone accounts for 42% of tagged records.',
+    'Media Type':          '100% filled. Documents dominate at 83%. Webinars and Videos are a small but useful subset.',
+    'Publication Type':    '69% filled. Reports, Presentations, and Journal Articles are the top three.',
+    'Status':              'All records are currently "Needs Review" — this field will become more useful after a cleanup pass.',
+    'Language':            '99% English. 21 Spanish-language resources.',
+    'Duplicate Flag':      'Sparsely populated — useful for identifying records flagged during import.',
+    'Author(s)':           'Free text field — values vary widely in format. Consider standardizing for better filtering.',
+    'Title':               'Free text. Every record should have a title; check coverage to find gaps.',
+    'Abstract / Summary':  'Free text. Useful for search but not for structured analysis.',
+    'URL / Link to Content': 'Free text URLs. Check coverage to find records missing a primary link.',
+    'Resource Link':       'Secondary link field. Often blank — used when a direct download URL differs from the page URL.',
+    'Attachment(s)':       'Tracks attached files. Sparse — most resources link externally rather than attaching files.',
+    'Date Added':          'Date the record was added to the database.',
+  };
+
+  document.getElementById('main').innerHTML = `
+    <div>
+      <div class="field-title">
+        <span class="f-dot" style="background:${fd.color};width:10px;height:10px;border-radius:50%"></span>
+        ${fd.label}
+      </div>
+      <div class="field-sub">${fd.group}</div>
+    </div>
+
+    ${rels.length ? `
+    <div>
+      <div class="section-label">Related fields</div>
+      <p class="related-note">Fields commonly co-populated or structurally linked to <strong>${fd.label}</strong>. Click to explore.</p>
+      <div class="chips">
+        ${rels.map(r => {
+          const rf = FIELD_DEFS.find(f => f.key === r);
+          return rf ? `<span class="chip" onclick="selectField('${r}')" style="cursor:pointer" onmouseover="this.style.borderColor='${rf.color}'" onmouseout="this.style.borderColor=''">
+            <span class="f-dot" style="background:${rf.color}"></span>${rf.label}
+          </span>` : '';
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    <div>
+      <div class="section-label">Field notes</div>
+      <p class="related-note">${NOTES[fd.key] || 'No notes available for this field.'}</p>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════
 if (getToken()) { loadData(); } else { showTokenPrompt(); }
 </script>
-
-<!-- ── TOKEN PROMPT OVERLAY ── -->
-<div id="tokenOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-  <div style="background:#18181c;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:32px 36px;width:420px;max-width:90vw;display:flex;flex-direction:column;gap:16px">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:11px;color:#fff">RE</div>
-      <span style="font-size:15px;font-weight:500;color:#e8e8ed">Resource Explorer</span>
-    </div>
-    <p style="font-size:12px;color:#888894;line-height:1.6">Enter your Airtable Personal Access Token to load the database. It will be saved in your browser — you won't need to enter it again.</p>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <label style="font-size:10px;color:#444450;font-family:monospace;text-transform:uppercase;letter-spacing:.06em">Airtable Token</label>
-      <input id="tokenInput" type="password" placeholder="pat..." onkeydown="if(event.key==='Enter')submitToken()"
-        style="background:#222228;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;color:#e8e8ed;font-size:13px;font-family:monospace;outline:none;transition:border .15s"
-        onfocus="this.style.borderColor='#7c6fff'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
-      <span id="tokenError" style="display:none;font-size:11px;color:#ff6b6b;font-family:monospace"></span>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <button onclick="submitToken()" style="flex:1;background:#7c6fff;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Connect</button>
-    </div>
-    <p style="font-size:11px;color:#444450;line-height:1.5">Get a token at <span style="color:#7c6fff">airtable.com/create/tokens</span> — scope: <span style="font-family:monospace;color:#4ecdc4">data.records:read</span></p>
-  </div>
-</div>
-
 </body>
 </html>
