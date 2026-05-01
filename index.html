@@ -1014,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('filterGroups').addEventListener('click', e => {
     const btn = e.target.closest('[data-showmore]');
-    if (btn) toggleFilterShowAll(btn.dataset.showmore);
+    if (btn) toggleFilterShowAll(btn.dataset.fieldkey);
   });
   document.getElementById('resultsList').addEventListener('click', e => {
     const btn = e.target.closest('.card-more-btn');
@@ -1140,7 +1140,7 @@ function buildFilterPanel() {
           }).join('')}
         </div>
         ${vals.length > MAX ? `<button class="filter-show-more"
-          id="fmore-${safeName}" data-showmore="${safeName}">
+          id="fmore-${safeName}" data-showmore="${safeName}" data-fieldkey="${fEsc}">
           ${showAll ? 'Show less ↑' : `+${vals.length - MAX} more`}
         </button>` : ''}
       </div>`;
