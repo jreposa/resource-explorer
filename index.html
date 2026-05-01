@@ -362,12 +362,14 @@ body {
 .card-detail { display: none; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 10px; }
 .result-card.expanded .card-detail { display: flex; flex-direction: column; gap: 10px; }
 .card-more-btn {
-  align-self: flex-start; margin-top: 6px;
+  align-self: flex-start; margin-top: 8px;
   font-size: 11px; font-family: 'DM Mono', monospace;
-  color: var(--accent); background: none; border: none;
-  cursor: pointer; padding: 0; opacity: .7; line-height: 1;
+  color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  cursor: pointer; padding: 4px 10px; line-height: 1;
+  transition: background .12s, color .12s, border-color .12s;
 }
-.card-more-btn:hover { opacity: 1; }
+.card-more-btn:hover { background: var(--border); color: var(--text); border-color: var(--border2); }
 .card-section-label {
   font-size: 10px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase;
   color: var(--faint); font-family: 'DM Mono', monospace; margin-bottom: 5px;
@@ -541,7 +543,7 @@ const FIELD_DEFS = [
   { key: 'Author(s)',             label: 'Author(s)',             type: 'multi',        color: '#9b8ff5', group: 'Content' },
   { key: 'Publication Year',     label: 'Publication Year',      type: 'year',        color: '#d97706', group: 'Content' },
   { key: 'Area of Emphasis',     label: 'Area of Emphasis',      type: 'categorical', color: '#5b50e8', group: 'Taxonomy' },
-  { key: 'Category',             label: 'Category',              type: 'categorical', color: '#0ea896', group: 'Taxonomy' },
+  { key: 'Category',             label: 'Category',              type: 'multi',       color: '#0ea896', group: 'Taxonomy' },
   { key: 'Subcategory',          label: 'Subcategory',           type: 'categorical', color: '#0ea896', group: 'Taxonomy' },
   { key: 'Keywords / Tags',      label: 'Keywords / Tags',       type: 'multi',       color: '#c026d3', group: 'Taxonomy' },
   { key: 'Media Type',           label: 'Media Type',            type: 'categorical', color: '#ea580c', group: 'Format' },
@@ -554,7 +556,7 @@ const FIELD_DEFS = [
   { key: 'Date Added',           label: 'Date Added',            type: 'text',        color: '#888894', group: 'Source & Admin' },
   { key: 'Status',               label: 'Status',                type: 'categorical', color: '#888894', group: 'Source & Admin' },
   { key: 'Duplicate Flag',       label: 'Duplicate Flag',        type: 'categorical', color: '#888894', group: 'Source & Admin' },
-  { key: 'External Resource',    label: 'External Resource',     type: 'categorical', color: '#2563eb', group: 'Source & Admin' },
+  { key: 'External Resource',    label: 'External Resource',     type: 'boolean',     color: '#2563eb', group: 'Source & Admin' },
 ];
 const GROUPS = ['Content', 'Taxonomy', 'Format', 'Audience & Scope', 'Source & Admin'];
 
@@ -668,12 +670,15 @@ function buildSidebar() {
     grpEl.innerHTML = `<div class="field-group-label">${g}</div>`;
     fields.forEach(fd => {
       const vals = getValues(fd);
+      const badge = fd.type === 'boolean' ? getFilled(fd)
+                  : fd.type === 'text'    ? '—'
+                  : (vals.length || '0');
       const btn = document.createElement('button');
       btn.className = 'field-btn' + (activeField === fd.key ? ' active' : '');
       btn.dataset.key = fd.key;
       btn.innerHTML = `<span class="f-dot" style="background:${fd.color}"></span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fd.label}</span>
-        <span class="f-badge">${vals.length || (fd.type === 'text' ? '—' : '0')}</span>`;
+        <span class="f-badge">${badge}</span>`;
       btn.onclick = () => selectField(fd.key);
       grpEl.appendChild(btn);
     });
@@ -1067,13 +1072,15 @@ function rebuildFieldChecklist(fieldKey) {
   const showAll = filterFieldShowAll[fieldKey];
   const display = showAll ? vals : vals.slice(0, MAX);
 
+  const displayLabel = v => (fd.type === 'boolean' && v === 'true') ? 'Yes' : v;
   container.innerHTML = display.map(([v, c]) => {
-    const vEsc = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    const fEsc = fieldKey.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const vEsc  = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const fEsc  = fieldKey.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const label = displayLabel(v).replace(/</g,'&lt;');
     return `<label class="filter-check">
       <input type="checkbox" ${selected.has(v) ? 'checked' : ''}
         data-field="${fEsc}" data-value="${vEsc}">
-      <span class="filter-check-label" title="${vEsc}">${vEsc}</span>
+      <span class="filter-check-label" title="${label}">${label}</span>
       <span class="filter-check-cnt">${c}</span>
     </label>`;
   }).join('');
@@ -1122,11 +1129,12 @@ function buildFilterPanel() {
         </div>
         <div class="filter-check-list" id="fcl-${safeName}">
           ${display.map(([v, c]) => {
-            const vEsc = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+            const vEsc  = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+            const label = (fd.type === 'boolean' && v === 'true' ? 'Yes' : v).replace(/</g,'&lt;');
             return `<label class="filter-check">
               <input type="checkbox" ${selected.has(v) ? 'checked' : ''}
                 data-field="${fEsc}" data-value="${vEsc}">
-              <span class="filter-check-label" title="${vEsc}">${vEsc}</span>
+              <span class="filter-check-label" title="${label}">${label}</span>
               <span class="filter-check-cnt">${c}</span>
             </label>`;
           }).join('')}
@@ -1221,22 +1229,27 @@ function loadMoreResults() {
 
 function parseDirectLinks(val) {
   if (!val) return [];
-  const clean = s => s.trim().replace(/^<+|>+$/g, '').trim();
-  const isUrl = s => /^https?:\/\//.test(s);
   if (Array.isArray(val)) {
-    return val.map(item => clean(item && typeof item === 'object' ? item.url : String(item))).filter(isUrl);
+    // Airtable attachment objects
+    return val.map(item => (item && typeof item === 'object' ? item.url : String(item)))
+      .map(s => s.trim()).filter(s => /^https?:\/\//.test(s));
   }
-  // Split on newlines; if nothing matches, try treating the whole value as a single URL
-  const lines = String(val).split(/\n+/).map(clean).filter(isUrl);
-  if (lines.length) return lines;
-  const whole = clean(String(val));
-  return isUrl(whole) ? [whole] : [];
+  // Extract every URL from the raw string regardless of delimiter or angle-bracket wrapping.
+  // Handles newline-separated, comma-separated, and `<url>, <url>` formats.
+  const matches = String(val).match(/https?:\/\/[^\s<>"']+/g) || [];
+  return matches.map(u => u.replace(/[,.)]+$/, '')); // strip trailing punctuation
 }
 
 function renderResultCard(r) {
   const fd_area  = FIELD_DEFS.find(f => f.key === 'Area of Emphasis');
   const fd_cat   = FIELD_DEFS.find(f => f.key === 'Category');
   const fd_media = FIELD_DEFS.find(f => f.key === 'Media Type');
+
+  const AREA_COLORS = { 'Employment': '#5d9632', 'Education': '#522e75', 'Health Care': '#d4652d' };
+  const areaTagStyle = raw => {
+    const bg = AREA_COLORS[raw] || fd_area.color;
+    return `background:${bg};color:#fff;border-color:${bg}`;
+  };
 
   const str = v => (v == null ? '' : Array.isArray(v) ? v.join(', ') : String(v));
   const esc = v => str(v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -1344,7 +1357,7 @@ function renderResultCard(r) {
       ${year ? `<span class="result-year">${year}</span>` : ''}
     </div>` : ''}
     ${area || category || media ? `<div class="result-tags">
-      ${area     ? `<span class="result-tag" style="color:${fd_area.color};border-color:${fd_area.color}33">${area}</span>` : ''}
+      ${area     ? `<span class="result-tag" style="${areaTagStyle(str(r['Area of Emphasis']))}">${area}</span>` : ''}
       ${category ? `<span class="result-tag" style="color:${fd_cat.color};border-color:${fd_cat.color}33">${category}</span>` : ''}
       ${media    ? `<span class="result-tag" style="color:${fd_media.color};border-color:${fd_media.color}33">${media}</span>` : ''}
     </div>` : ''}
