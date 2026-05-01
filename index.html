@@ -219,6 +219,184 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
+/* ── MODE TOGGLE ── */
+.mode-toggle { display: flex; gap: 3px; }
+.mode-btn {
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  padding: 4px 10px; border-radius: var(--radius);
+  border: 1px solid var(--border2); background: none;
+  color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.mode-btn:not(.active):hover { color: var(--text); border-color: var(--accent); }
+.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.app.hidden { display: none; }
+
+/* ── SEARCH LAYOUT ── */
+.search-wrap {
+  display: none;
+  grid-template-columns: 270px 1fr;
+  height: calc(100vh - 49px);
+}
+.search-wrap.visible { display: grid; }
+
+/* ── FILTER PANEL ── */
+.filter-panel {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.filter-top {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.filter-search-input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 10px; color: var(--text); font-size: 12px;
+  font-family: 'DM Sans', sans-serif; outline: none;
+}
+.filter-search-input:focus { border-color: var(--accent); }
+.filter-search-input::placeholder { color: var(--faint); }
+.filter-meta-row { display: flex; justify-content: space-between; align-items: center; }
+.filter-count-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.filter-active-label { font-size: 10px; color: var(--accent); font-family: 'DM Mono', monospace; }
+.filter-clear-btn {
+  font-size: 11px; color: var(--accent3); background: none;
+  border: none; cursor: pointer; font-family: 'DM Mono', monospace;
+}
+.filter-clear-btn:hover { text-decoration: underline; }
+.filter-groups { overflow-y: auto; flex: 1; padding: 4px 0 20px; }
+.filter-group { padding-bottom: 4px; margin-bottom: 0; }
+.filter-group-hdr {
+  font-size: 9px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--faint);
+  padding: 10px 14px 3px; font-family: 'DM Mono', monospace;
+}
+.filter-field-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+  padding: 6px 14px 3px;
+  font-family: 'DM Mono', monospace;
+}
+.filter-active-badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 4px;
+  background: rgba(91,80,232,.12); color: var(--accent);
+  border: 1px solid rgba(91,80,232,.2);
+}
+.filter-check-list { padding: 0 8px 2px; display: flex; flex-direction: column; gap: 0; }
+.filter-check {
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 6px; border-radius: 4px; cursor: pointer;
+}
+.filter-check:hover { background: var(--surface2); }
+.filter-check input[type=checkbox] {
+  width: 12px; height: 12px; accent-color: var(--accent);
+  cursor: pointer; flex-shrink: 0;
+}
+.filter-check-label {
+  font-size: 12px; color: var(--muted); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.filter-check:has(input:checked) .filter-check-label { color: var(--text); }
+.filter-check-cnt { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--faint); flex-shrink: 0; }
+.filter-show-more {
+  font-size: 11px; color: var(--accent); background: none;
+  border: none; cursor: pointer; padding: 2px 14px 6px;
+  font-family: 'DM Mono', monospace; opacity: .75;
+}
+.filter-show-more:hover { opacity: 1; }
+
+/* ── RESULTS PANEL ── */
+.results-panel { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.results-hdr { display: flex; align-items: baseline; gap: 10px; }
+.results-hdr-title { font-size: 14px; font-weight: 500; }
+.results-hdr-count { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.results-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── RESULT CARD ── */
+.result-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 5px;
+  transition: border-color .12s, box-shadow .12s;
+}
+.result-card:hover { border-color: var(--border2); box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.result-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.result-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-author { font-size: 11px; color: var(--muted); }
+.result-year { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--faint); }
+.result-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 1px; }
+.result-tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+}
+.result-abstract { font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 2px; }
+.result-links { display: flex; gap: 12px; align-items: center; margin-top: 3px; }
+.result-link {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--accent); text-decoration: none;
+  font-family: 'DM Mono', monospace;
+}
+.result-link:hover { text-decoration: underline; }
+.result-link.secondary { color: var(--faint); }
+.result-link.secondary:hover { color: var(--muted); }
+.no-results {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 260px; gap: 10px; text-align: center;
+}
+.load-more-btn {
+  align-self: center; font-size: 12px; font-family: 'DM Mono', monospace;
+  padding: 8px 22px; border-radius: var(--radius);
+  border: 1px solid var(--border2); background: var(--surface);
+  color: var(--muted); cursor: pointer; transition: all .15s; margin-top: 4px;
+}
+.load-more-btn:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── CARD EXPAND / COLLAPSE ── */
+.abstract-preview { font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 2px; }
+.result-card.expanded .abstract-preview { display: none; }
+.card-detail { display: none; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 10px; }
+.result-card.expanded .card-detail { display: flex; flex-direction: column; gap: 10px; }
+.card-more-btn {
+  align-self: flex-start; margin-top: 6px;
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  color: var(--accent); background: none; border: none;
+  cursor: pointer; padding: 0; opacity: .7; line-height: 1;
+}
+.card-more-btn:hover { opacity: 1; }
+.card-section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--faint); font-family: 'DM Mono', monospace; margin-bottom: 5px;
+}
+.card-link-list { display: flex; flex-direction: column; gap: 5px; }
+.card-link-item { display: flex; align-items: baseline; gap: 7px; }
+.card-link-bullet { color: var(--faint); flex-shrink: 0; font-size: 11px; }
+.card-link-item a {
+  color: var(--accent); text-decoration: none; font-size: 11px;
+  font-family: 'DM Mono', monospace; word-break: break-all; line-height: 1.5;
+}
+.card-link-item a:hover { text-decoration: underline; }
+.card-meta-grid { display: flex; flex-direction: column; gap: 5px; }
+.card-meta-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.card-meta-key {
+  font-size: 10px; font-family: 'DM Mono', monospace; color: var(--faint);
+  text-transform: uppercase; letter-spacing: .06em; flex: 0 0 130px;
+}
+.card-meta-val { font-size: 12px; color: var(--muted); flex: 1; }
+.result-external-badge {
+  display: inline-flex; align-items: center;
+  font-size: 9px; font-family: 'DM Mono', monospace; font-weight: 500;
+  padding: 1px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px;
+  background: rgba(37,99,235,.08); color: #2563eb; border: 1px solid rgba(37,99,235,.2);
+}
+.result-link-hint {
+  font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px;
+}
+
 /* ── TOKEN OVERLAY ── */
 .overlay {
   display: none; position: fixed; inset: 0;
@@ -262,6 +440,10 @@ body {
       <span class="status-dot loading" id="statusDot"></span>
       <span id="statusText">Loading…</span>
     </span>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="explore" onclick="switchMode('explore')">Explore</button>
+      <button class="mode-btn" data-mode="search" onclick="switchMode('search')">Search</button>
+    </div>
     <button class="hdr-btn" onclick="loadData()">↺ Refresh</button>
     <button class="hdr-btn danger" onclick="clearToken();showTokenPrompt()">⚙ Token</button>
   </div>
@@ -288,6 +470,38 @@ body {
         <div class="intro-sub">Choose any field from the sidebar once records have loaded.</div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- SEARCH LAYOUT -->
+<div class="search-wrap" id="searchWrap">
+  <div class="filter-panel">
+    <div class="filter-top">
+      <input class="filter-search-input" id="searchInput" type="text"
+        placeholder="Search titles, abstracts, authors…"
+        oninput="onSearchInput(this.value)">
+      <div class="filter-meta-row">
+        <span class="filter-count-label" id="searchResultCount">—</span>
+        <button class="filter-clear-btn" onclick="clearAllFilters()">Clear all</button>
+      </div>
+      <div class="filter-active-label" id="filterActiveLabel"></div>
+    </div>
+    <div class="filter-groups" id="filterGroups"></div>
+  </div>
+
+  <div class="results-panel" id="resultsPanel">
+    <div class="results-hdr">
+      <span class="results-hdr-title">Resources</span>
+    </div>
+    <div class="results-list" id="resultsList">
+      <div class="no-results">
+        <div class="intro-icon">◈</div>
+        <div class="intro-title">Loading data…</div>
+        <div class="intro-sub">Records will appear here once data has loaded.</div>
+      </div>
+    </div>
+    <button class="load-more-btn" id="loadMoreBtn" style="display:none"
+      onclick="loadMoreResults()">Load more</button>
   </div>
 </div>
 
@@ -340,6 +554,7 @@ const FIELD_DEFS = [
   { key: 'Date Added',           label: 'Date Added',            type: 'text',        color: '#888894', group: 'Source & Admin' },
   { key: 'Status',               label: 'Status',                type: 'categorical', color: '#888894', group: 'Source & Admin' },
   { key: 'Duplicate Flag',       label: 'Duplicate Flag',        type: 'categorical', color: '#888894', group: 'Source & Admin' },
+  { key: 'External Resource',    label: 'External Resource',     type: 'categorical', color: '#2563eb', group: 'Source & Admin' },
 ];
 const GROUPS = ['Content', 'Taxonomy', 'Format', 'Audience & Scope', 'Source & Admin'];
 
@@ -423,13 +638,14 @@ async function loadData() {
         throw new Error(err.error?.message || `HTTP ${res.status}`);
       }
       const data = await res.json();
-      ALL_RECORDS = ALL_RECORDS.concat(data.records.map(r => r.fields));
+      ALL_RECORDS = ALL_RECORDS.concat(data.records.map(r => ({ ...r.fields, _id: r.id })));
       offset = data.offset || null;
       setStatus('loading', `Loaded ${ALL_RECORDS.length}…`);
     } while (offset);
     setStatus('ok', `${ALL_RECORDS.length.toLocaleString()} records · ${new Date().toLocaleTimeString()}`);
     buildSidebar();
     if (activeField) renderPanel();
+    if (currentMode === 'search') buildFilterPanel();
   } catch (e) {
     setStatus('err', `Error: ${e.message}`);
   }
@@ -735,6 +951,408 @@ function renderRelated() {
       <div class="section-label">Field notes</div>
       <p class="related-note">${NOTES[fd.key] || 'No notes available for this field.'}</p>
     </div>`;
+}
+
+// ══════════════════════════════════════
+// SEARCH / FILTER MODE
+// ══════════════════════════════════════
+let currentMode = 'explore';
+let searchText = '';
+let activeFilters = {};       // fieldKey -> Set<string>
+let filterFieldShowAll = {};  // fieldKey -> bool
+let searchResultOffset = 0;
+let searchDebounceTimer = null;
+const RESULTS_PER_PAGE = 25;
+
+// Fields available as filter facets, in display order
+const FILTER_FIELDS = [
+  { key: 'Publication Year',  group: 'Content' },
+  { key: 'Area of Emphasis',  group: 'Taxonomy' },
+  { key: 'Category',          group: 'Taxonomy' },
+  { key: 'Subcategory',       group: 'Taxonomy' },
+  { key: 'Keywords / Tags',   group: 'Taxonomy' },
+  { key: 'Media Type',        group: 'Format' },
+  { key: 'Publication Type',  group: 'Format' },
+  { key: 'Geographic Scope',  group: 'Audience & Scope' },
+  { key: 'Intended Audience', group: 'Audience & Scope' },
+  { key: 'Project',             group: 'Source & Admin' },
+  { key: 'Source System',       group: 'Source & Admin' },
+  { key: 'External Resource',   group: 'Source & Admin' },
+];
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelector('.app').classList.toggle('hidden', mode === 'search');
+  document.getElementById('searchWrap').classList.toggle('visible', mode === 'search');
+  document.querySelectorAll('.mode-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  if (mode === 'search' && ALL_RECORDS.length) buildFilterPanel();
+}
+
+function onSearchInput(val) {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    searchText = val;
+    searchResultOffset = 0;
+    renderResults();
+    updateFilterActiveLabel();
+  }, 200);
+}
+
+// Event delegation for filter checkboxes, show-more buttons, and card expand toggles
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('filterGroups').addEventListener('change', e => {
+    if (e.target.type === 'checkbox') {
+      const { field, value } = e.target.dataset;
+      toggleFilter(field, value, e.target.checked);
+    }
+  });
+  document.getElementById('filterGroups').addEventListener('click', e => {
+    const btn = e.target.closest('[data-showmore]');
+    if (btn) toggleFilterShowAll(btn.dataset.showmore);
+  });
+  document.getElementById('resultsList').addEventListener('click', e => {
+    const btn = e.target.closest('.card-more-btn');
+    if (!btn) return;
+    const card = btn.closest('.result-card');
+    const expanded = card.classList.toggle('expanded');
+    btn.textContent = expanded ? 'Less ↑' : 'More ↓';
+  });
+});
+
+function toggleFilter(fieldKey, value, checked) {
+  if (!activeFilters[fieldKey]) activeFilters[fieldKey] = new Set();
+  if (checked) activeFilters[fieldKey].add(value);
+  else activeFilters[fieldKey].delete(value);
+
+  // Update the badge next to this field's label without rebuilding the panel
+  const safeName = fieldKey.replace(/\W+/g, '_');
+  const badge = document.getElementById('fbadge-' + safeName);
+  if (badge) {
+    const cnt = activeFilters[fieldKey].size;
+    badge.textContent = cnt;
+    badge.style.display = cnt ? '' : 'none';
+  }
+
+  searchResultOffset = 0;
+  renderResults();
+  updateFilterActiveLabel();
+}
+
+function clearAllFilters() {
+  searchText = '';
+  activeFilters = {};
+  filterFieldShowAll = {};
+  searchResultOffset = 0;
+  document.getElementById('searchInput').value = '';
+  buildFilterPanel();
+}
+
+function toggleFilterShowAll(fieldKey) {
+  filterFieldShowAll[fieldKey] = !filterFieldShowAll[fieldKey];
+  rebuildFieldChecklist(fieldKey);
+}
+
+function rebuildFieldChecklist(fieldKey) {
+  const fd = FIELD_DEFS.find(f => f.key === fieldKey);
+  if (!fd) return;
+  const safeName = fieldKey.replace(/\W+/g, '_');
+  const container = document.getElementById('fcl-' + safeName);
+  const moreBtn   = document.getElementById('fmore-' + safeName);
+  if (!container) return;
+
+  const MAX = 8;
+  const vals = getValues(fd);
+  const selected = activeFilters[fieldKey] || new Set();
+  const showAll = filterFieldShowAll[fieldKey];
+  const display = showAll ? vals : vals.slice(0, MAX);
+
+  container.innerHTML = display.map(([v, c]) => {
+    const vEsc = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const fEsc = fieldKey.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return `<label class="filter-check">
+      <input type="checkbox" ${selected.has(v) ? 'checked' : ''}
+        data-field="${fEsc}" data-value="${vEsc}">
+      <span class="filter-check-label" title="${vEsc}">${vEsc}</span>
+      <span class="filter-check-cnt">${c}</span>
+    </label>`;
+  }).join('');
+
+  if (moreBtn) {
+    if (vals.length <= MAX) { moreBtn.style.display = 'none'; }
+    else {
+      moreBtn.style.display = '';
+      moreBtn.textContent = showAll ? 'Show less ↑' : `+${vals.length - MAX} more`;
+    }
+  }
+}
+
+function buildFilterPanel() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+
+  GROUPS.forEach(group => {
+    const fields = FILTER_FIELDS.filter(f => f.group === group);
+    if (!fields.length) return;
+
+    const grpEl = document.createElement('div');
+    grpEl.className = 'filter-group';
+    let inner = `<div class="filter-group-hdr">${group}</div>`;
+
+    fields.forEach(ff => {
+      const fd = FIELD_DEFS.find(f => f.key === ff.key);
+      if (!fd) return;
+      const vals = getValues(fd);
+      if (!vals.length) return;
+
+      const MAX = 8;
+      const safeName = fd.key.replace(/\W+/g, '_');
+      const selected = activeFilters[fd.key] || new Set();
+      const showAll = filterFieldShowAll[fd.key];
+      const display = showAll ? vals : vals.slice(0, MAX);
+      const fEsc = fd.key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      const cnt = selected.size;
+
+      inner += `<div>
+        <div class="filter-field-label">
+          <span class="f-dot" style="background:${fd.color}"></span>
+          <span style="flex:1">${fd.label}</span>
+          <span class="filter-active-badge" id="fbadge-${safeName}"
+            style="display:${cnt ? '' : 'none'}">${cnt || ''}</span>
+        </div>
+        <div class="filter-check-list" id="fcl-${safeName}">
+          ${display.map(([v, c]) => {
+            const vEsc = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+            return `<label class="filter-check">
+              <input type="checkbox" ${selected.has(v) ? 'checked' : ''}
+                data-field="${fEsc}" data-value="${vEsc}">
+              <span class="filter-check-label" title="${vEsc}">${vEsc}</span>
+              <span class="filter-check-cnt">${c}</span>
+            </label>`;
+          }).join('')}
+        </div>
+        ${vals.length > MAX ? `<button class="filter-show-more"
+          id="fmore-${safeName}" data-showmore="${safeName}">
+          ${showAll ? 'Show less ↑' : `+${vals.length - MAX} more`}
+        </button>` : ''}
+      </div>`;
+    });
+
+    grpEl.innerHTML = inner;
+    container.appendChild(grpEl);
+  });
+
+  renderResults();
+  updateFilterActiveLabel();
+}
+
+function updateFilterActiveLabel() {
+  const total = Object.values(activeFilters).reduce((s, set) => s + set.size, 0)
+    + (searchText ? 1 : 0);
+  const el = document.getElementById('filterActiveLabel');
+  if (el) el.textContent = total ? `${total} filter${total > 1 ? 's' : ''} active` : '';
+}
+
+function getFilteredRecords() {
+  return ALL_RECORDS.filter(r => {
+    // Full-text search across Title, Abstract, Authors
+    if (searchText) {
+      const q = searchText.toLowerCase();
+      const hay = [r['Title'] || '', r['Abstract / Summary'] || '', r['Author(s)'] || '']
+        .join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+
+    // Facet filters: AND across fields, OR within a field's selected values
+    for (const [fieldKey, selectedVals] of Object.entries(activeFilters)) {
+      if (!selectedVals.size) continue;
+      const fd = FIELD_DEFS.find(f => f.key === fieldKey);
+      if (!fd) continue;
+      const raw = r[fieldKey];
+      if (raw == null || String(raw).trim() === '') return false;
+      const str = String(raw).trim();
+      const recordVals = fd.type === 'multi'
+        ? str.split(/[,;]+/).map(v => v.trim()).filter(Boolean)
+        : [str];
+      if (!recordVals.some(rv => selectedVals.has(rv))) return false;
+    }
+
+    return true;
+  });
+}
+
+function renderResults() {
+  if (!ALL_RECORDS.length) return;
+
+  const filtered = getFilteredRecords();
+  const pageEnd  = searchResultOffset + RESULTS_PER_PAGE;
+  const page     = filtered.slice(0, pageEnd);
+
+  document.getElementById('searchResultCount').textContent =
+    `${filtered.length.toLocaleString()} result${filtered.length !== 1 ? 's' : ''}`;
+
+  const container = document.getElementById('resultsList');
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="no-results">
+      <div class="intro-icon">◈</div>
+      <div class="intro-title">No matching results</div>
+      <div class="intro-sub">Try removing some filters or broadening your search.</div>
+    </div>`;
+    document.getElementById('loadMoreBtn').style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = page.map(renderResultCard).join('');
+
+  const loadMore = document.getElementById('loadMoreBtn');
+  if (filtered.length > pageEnd) {
+    loadMore.style.display = '';
+    loadMore.textContent = `Load more (${(filtered.length - pageEnd).toLocaleString()} remaining)`;
+  } else {
+    loadMore.style.display = 'none';
+  }
+}
+
+function loadMoreResults() {
+  searchResultOffset += RESULTS_PER_PAGE;
+  renderResults();
+}
+
+function parseDirectLinks(val) {
+  if (!val) return [];
+  const clean = s => s.trim().replace(/^<+|>+$/g, '').trim();
+  const isUrl = s => /^https?:\/\//.test(s);
+  if (Array.isArray(val)) {
+    return val.map(item => clean(item && typeof item === 'object' ? item.url : String(item))).filter(isUrl);
+  }
+  // Split on newlines; if nothing matches, try treating the whole value as a single URL
+  const lines = String(val).split(/\n+/).map(clean).filter(isUrl);
+  if (lines.length) return lines;
+  const whole = clean(String(val));
+  return isUrl(whole) ? [whole] : [];
+}
+
+function renderResultCard(r) {
+  const fd_area  = FIELD_DEFS.find(f => f.key === 'Area of Emphasis');
+  const fd_cat   = FIELD_DEFS.find(f => f.key === 'Category');
+  const fd_media = FIELD_DEFS.find(f => f.key === 'Media Type');
+
+  const str = v => (v == null ? '' : Array.isArray(v) ? v.join(', ') : String(v));
+  const esc = v => str(v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const escAttr = v => str(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const title      = esc(r['Title']) || '(untitled)';
+  const year       = str(r['Publication Year']);
+  const rawAuth    = str(r['Author(s)']);
+  const category   = esc(r['Category']);
+  const area       = esc(r['Area of Emphasis']);
+  const media      = esc(r['Media Type']);
+  const rawAbs     = str(r['Abstract / Summary']);
+  const isExternal = r['External Resource'] === true;
+  const recId      = r._id || '';
+
+  const cleanUrl = u => str(u).trim().replace(/^<+|>+$/g, '').trim();
+  const directLinks  = parseDirectLinks(r['Resource Direct Link']);
+  const contentUrl   = cleanUrl(r['URL / Link to Content'] || r['Resource Link']);
+  const airtableUrl  = recId
+    ? `https://airtable.com/${CONFIG.baseId}/${CONFIG.tableId}/${recId}`
+    : '';
+
+  // Collapsed abstract: first 220 chars
+  const SNIP = 220;
+  const absIsTruncated = rawAbs.length > SNIP;
+  const absSnippet = absIsTruncated
+    ? esc(rawAbs.slice(0, SNIP)) + '…'
+    : esc(rawAbs);
+
+  const authorStr = rawAuth.length > 90
+    ? esc(rawAuth.slice(0, 90)) + '…'
+    : esc(rawAuth);
+
+  // ── collapsed link row ──
+  let collapsedLinks = '';
+  if (directLinks.length > 1) {
+    collapsedLinks = contentUrl
+      ? `<div class="result-links">
+          <a class="result-link" href="${escAttr(contentUrl)}" target="_blank" rel="noopener">↗ View content</a>
+          <span class="result-link-hint" style="margin-top:0">${directLinks.length} direct links — expand to view</span>
+        </div>`
+      : `<div class="result-link-hint">↗ ${directLinks.length} direct links — expand to view</div>`;
+  } else if (contentUrl) {
+    collapsedLinks = `<div class="result-links">
+      <a class="result-link" href="${escAttr(contentUrl)}" target="_blank" rel="noopener">↗ View content</a>
+    </div>`;
+  }
+
+  // ── expanded detail ──
+  let detailHtml = '';
+
+  // Full abstract (only rendered in detail if it was truncated)
+  if (absIsTruncated) {
+    detailHtml += `<div>
+      <div class="card-section-label">Abstract</div>
+      <div class="result-abstract">${esc(rawAbs)}</div>
+    </div>`;
+  }
+
+  // Direct links (expanded only, from Resource Direct Link field)
+  if (directLinks.length) {
+    detailHtml += `<div>
+      <div class="card-section-label">Direct Link to Resource${directLinks.length > 1 ? 's' : ''}</div>
+      <div class="card-link-list">
+        ${directLinks.map(u => `<div class="card-link-item">
+          <span class="card-link-bullet">↗</span>
+          <a href="${escAttr(u)}" target="_blank" rel="noopener">${esc(u)}</a>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Extra metadata rows
+  const metaRows = [
+    { key: 'Subcategory',        label: 'Subcategory' },
+    { key: 'Keywords / Tags',    label: 'Keywords' },
+    { key: 'Intended Audience',  label: 'Audience' },
+    { key: 'Geographic Scope',   label: 'Geographic scope' },
+    { key: 'Publication Type',   label: 'Publication type' },
+    { key: 'Language',           label: 'Language' },
+  ].filter(m => str(r[m.key]));
+
+  if (metaRows.length) {
+    detailHtml += `<div>
+      <div class="card-section-label">Details</div>
+      <div class="card-meta-grid">
+        ${metaRows.map(m => `<div class="card-meta-row">
+          <span class="card-meta-key">${m.label}</span>
+          <span class="card-meta-val">${esc(r[m.key])}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (airtableUrl) {
+    detailHtml += `<div class="result-links">
+      <a class="result-link secondary" href="${escAttr(airtableUrl)}" target="_blank" rel="noopener">⊞ Open in Airtable</a>
+    </div>`;
+  }
+
+  return `<div class="result-card">
+    <div class="result-title">${title}${isExternal ? '<span class="result-external-badge">External</span>' : ''}</div>
+    ${authorStr || year ? `<div class="result-byline">
+      ${authorStr ? `<span class="result-author">${authorStr}</span>` : ''}
+      ${year ? `<span class="result-year">${year}</span>` : ''}
+    </div>` : ''}
+    ${area || category || media ? `<div class="result-tags">
+      ${area     ? `<span class="result-tag" style="color:${fd_area.color};border-color:${fd_area.color}33">${area}</span>` : ''}
+      ${category ? `<span class="result-tag" style="color:${fd_cat.color};border-color:${fd_cat.color}33">${category}</span>` : ''}
+      ${media    ? `<span class="result-tag" style="color:${fd_media.color};border-color:${fd_media.color}33">${media}</span>` : ''}
+    </div>` : ''}
+    ${absSnippet ? `<div class="abstract-preview">${absSnippet}</div>` : ''}
+    ${collapsedLinks}
+    ${detailHtml ? `<div class="card-detail">${detailHtml}</div>` : ''}
+    ${detailHtml ? `<button class="card-more-btn">More ↓</button>` : ''}
+  </div>`;
 }
 
 // ══════════════════════════════════════
