@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submission Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f5f5f7;
+  --surface:   #ffffff;
+  --surface2:  #f0f0f3;
+  --border:    rgba(0,0,0,.08);
+  --border2:   rgba(0,0,0,.14);
+  --text:      #1a1a1f;
+  --muted:     #666670;
+  --faint:     #aaaabc;
+  --accent:    #5b50e8;
+  --accent2:   #0ea896;
+  --accent3:   #e84444;
+  --amber:     #d97706;
+  --green:     #16a34a;
+  --radius:    8px;
+  --radius-lg: 12px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--surface); position: sticky; top: 0; z-index: 10;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; color: #fff;
+}
+.header h1 { font-size: 13px; font-weight: 500; color: var(--text); }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.header-meta { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
+.status-dot.loading { background: var(--amber); animation: pulse 1s infinite; }
+.status-dot.ok { background: var(--green); }
+.status-dot.err { background: var(--accent3); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.hdr-btn {
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  padding: 4px 10px; border-radius: var(--radius);
+  border: 1px solid var(--border2); background: none;
+  color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.hdr-btn:hover { color: var(--text); border-color: var(--accent); }
+.hdr-btn.danger { border-color: rgba(232,68,68,.25); color: var(--accent3); }
+.hdr-btn.danger:hover { border-color: var(--accent3); }
+
+/* ── LAYOUT ── */
+.app { display: grid; grid-template-columns: 210px 1fr; height: calc(100vh - 49px); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: var(--surface); overflow: hidden;
+}
+.sidebar-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.sidebar-search input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 5px 9px; color: var(--text); font-size: 12px;
+  font-family: 'DM Sans', sans-serif; outline: none;
+}
+.sidebar-search input:focus { border-color: var(--accent); }
+.sidebar-search input::placeholder { color: var(--faint); }
+.field-groups { overflow-y: auto; flex: 1; padding: 6px 0 16px; }
+.field-group-label {
+  font-size: 9px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--faint);
+  padding: 10px 14px 3px; font-family: 'DM Mono', monospace;
+}
+.field-btn {
+  width: 100%; text-align: left; background: none;
+  border: none; padding: 5px 14px; cursor: pointer;
+  color: var(--muted); font-size: 12px;
+  display: flex; align-items: center; gap: 7px;
+  transition: color .1s; position: relative;
+}
+.field-btn:hover { color: var(--text); background: var(--surface2); }
+.field-btn.active { color: var(--accent); background: rgba(91,80,232,.06); }
+.field-btn.active::before {
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
+  width: 2px; border-radius: 0 2px 2px 0; background: var(--accent);
+}
+.f-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.f-badge {
+  margin-left: auto; font-size: 9px; font-family: 'DM Mono', monospace;
+  color: var(--faint); background: var(--surface2);
+  padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border);
+}
+.field-btn.active .f-badge { color: var(--accent); background: rgba(91,80,232,.08); border-color: rgba(91,80,232,.2); }
+
+/* ── MAIN PANEL ── */
+.main-wrap { display: flex; flex-direction: column; overflow: hidden; }
+.main-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--surface); padding: 0 20px;
+}
+.tab-btn {
+  font-size: 12.5px; padding: 10px 14px; cursor: pointer;
+  color: var(--muted); border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .1s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+.main { overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+
+/* ── INTRO ── */
+.intro-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 300px; gap: 10px; text-align: center;
+}
+.intro-icon { font-size: 28px; opacity: .15; }
+.intro-title { font-size: 14px; color: var(--muted); }
+.intro-sub { font-size: 12px; color: var(--faint); max-width: 260px; line-height: 1.6; }
+
+/* ── FIELD HEADER ── */
+.field-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
+.field-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tag {
+  font-size: 9px; font-family: 'DM Mono', monospace; font-weight: 500;
+  padding: 2px 6px; border-radius: 4px; letter-spacing: .04em;
+}
+.tag-multi { background: rgba(217,119,6,.1); color: var(--amber); }
+.tag-text  { background: rgba(14,168,150,.1); color: var(--accent2); }
+.tag-combo { background: rgba(91,80,232,.1); color: var(--accent); }
+
+/* ── STAT CARDS ── */
+.stats-row { display: flex; gap: 8px; }
+.stat-card {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 10px 14px;
+}
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-family: 'DM Mono', monospace; margin-bottom: 3px; }
+.stat-val { font-size: 20px; font-weight: 400; color: var(--text); font-family: 'DM Mono', monospace; }
+.stat-val small { font-size: 11px; color: var(--muted); margin-left: 2px; }
+
+/* ── COVERAGE ── */
+.coverage-wrap { display: flex; align-items: center; gap: 10px; }
+.coverage-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.coverage-fill { height: 100%; border-radius: 2px; }
+.coverage-label { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); flex: 0 0 32px; text-align: right; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--faint);
+  font-family: 'DM Mono', monospace; margin-bottom: 10px;
+}
+
+/* ── BAR LIST ── */
+.bar-list { display: flex; flex-direction: column; gap: 4px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label {
+  font-size: 12px; color: var(--muted); flex: 0 0 210px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: color .1s;
+}
+.bar-row:hover .bar-label { color: var(--text); }
+.bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-count { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--faint); flex: 0 0 32px; text-align: right; }
+.show-more-btn {
+  font-size: 11px; color: var(--accent); background: none;
+  border: none; cursor: pointer; padding: 8px 0;
+  font-family: 'DM Mono', monospace; opacity: .8;
+}
+.show-more-btn:hover { opacity: 1; }
+
+/* ── SAMPLE BOX (text fields) ── */
+.sample-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+.sample-item {
+  font-size: 12px; color: var(--muted); line-height: 1.6;
+  padding: 9px 14px; border-bottom: 1px solid var(--border);
+}
+.sample-item:last-child { border-bottom: none; }
+
+/* ── CHART ── */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── RELATED CHIPS ── */
+.related-note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 12px; padding: 4px 10px;
+  border-radius: var(--radius); border: 1px solid var(--border2);
+  color: var(--muted); background: var(--surface); cursor: default;
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+/* ── MODE TOGGLE ── */
+.mode-toggle { display: flex; gap: 3px; }
+.mode-btn {
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  padding: 4px 10px; border-radius: var(--radius);
+  border: 1px solid var(--border2); background: none;
+  color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.mode-btn:not(.active):hover { color: var(--text); border-color: var(--accent); }
+.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.app.hidden { display: none; }
+
+/* ── SEARCH LAYOUT ── */
+.search-wrap {
+  display: none;
+  grid-template-columns: 270px 1fr;
+  height: calc(100vh - 49px);
+}
+.search-wrap.visible { display: grid; }
+
+/* ── FILTER PANEL ── */
+.filter-panel {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.filter-top {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.filter-search-input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 10px; color: var(--text); font-size: 12px;
+  font-family: 'DM Sans', sans-serif; outline: none;
+}
+.filter-search-input:focus { border-color: var(--accent); }
+.filter-search-input::placeholder { color: var(--faint); }
+.filter-meta-row { display: flex; justify-content: space-between; align-items: center; }
+.filter-count-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.filter-active-label { font-size: 10px; color: var(--accent); font-family: 'DM Mono', monospace; }
+.filter-clear-btn {
+  font-size: 11px; color: var(--accent3); background: none;
+  border: none; cursor: pointer; font-family: 'DM Mono', monospace;
+}
+.filter-clear-btn:hover { text-decoration: underline; }
+.filter-groups { overflow-y: auto; flex: 1; padding: 4px 0 20px; }
+.filter-group { padding-bottom: 4px; margin-bottom: 0; }
+.filter-group-hdr {
+  font-size: 9px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--faint);
+  padding: 10px 14px 3px; font-family: 'DM Mono', monospace;
+}
+.filter-field-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+  padding: 6px 14px 3px;
+  font-family: 'DM Mono', monospace;
+}
+.filter-active-badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 4px;
+  background: rgba(91,80,232,.12); color: var(--accent);
+  border: 1px solid rgba(91,80,232,.2);
+}
+.filter-check-list { padding: 0 8px 2px; display: flex; flex-direction: column; gap: 0; }
+.filter-check {
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 6px; border-radius: 4px; cursor: pointer;
+}
+.filter-check:hover { background: var(--surface2); }
+.filter-check input[type=checkbox] {
+  width: 12px; height: 12px; accent-color: var(--accent);
+  cursor: pointer; flex-shrink: 0;
+}
+.filter-check-label {
+  font-size: 12px; color: var(--muted); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.filter-check:has(input:checked) .filter-check-label { color: var(--text); }
+.filter-check-cnt { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--faint); flex-shrink: 0; }
+.filter-show-more {
+  font-size: 11px; color: var(--accent); background: none;
+  border: none; cursor: pointer; padding: 2px 14px 6px;
+  font-family: 'DM Mono', monospace; opacity: .75;
+}
+.filter-show-more:hover { opacity: 1; }
+
+/* ── RESULTS PANEL ── */
+.results-panel { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.results-hdr { display: flex; align-items: baseline; gap: 10px; }
+.results-hdr-title { font-size: 14px; font-weight: 500; }
+.results-hdr-count { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.results-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── RESULT CARD ── */
+.result-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 5px;
+  transition: border-color .12s, box-shadow .12s;
+}
+.result-card:hover { border-color: var(--border2); box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.result-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.result-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-author { font-size: 11px; color: var(--muted); }
+.result-year { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--faint); }
+.result-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 1px; }
+.result-tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+}
+.result-abstract { font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 2px; }
+.result-links { display: flex; gap: 12px; align-items: center; margin-top: 3px; }
+.result-link {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--accent); text-decoration: none;
+  font-family: 'DM Mono', monospace;
+}
+.result-link:hover { text-decoration: underline; }
+.result-link.secondary { color: var(--faint); }
+.result-link.secondary:hover { color: var(--muted); }
+.no-results {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 260px; gap: 10px; text-align: center;
+}
+.load-more-btn {
+  align-self: center; font-size: 12px; font-family: 'DM Mono', monospace;
+  padding: 8px 22px; border-radius: var(--radius);
+  border: 1px solid var(--border2); background: var(--surface);
+  color: var(--muted); cursor: pointer; transition: all .15s; margin-top: 4px;
+}
+.load-more-btn:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── CARD EXPAND / COLLAPSE ── */
+.abstract-preview { font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 2px; }
+.result-card.expanded .abstract-preview { display: none; }
+.card-detail { display: none; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 10px; }
+.result-card.expanded .card-detail { display: flex; flex-direction: column; gap: 10px; }
+.card-more-btn {
+  align-self: flex-start; margin-top: 8px;
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  cursor: pointer; padding: 4px 10px; line-height: 1;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.card-more-btn:hover { background: var(--border); color: var(--text); border-color: var(--border2); }
+.card-section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--faint); font-family: 'DM Mono', monospace; margin-bottom: 5px;
+}
+.card-link-list { display: flex; flex-direction: column; gap: 5px; }
+.card-link-item { display: flex; align-items: baseline; gap: 7px; }
+.card-link-bullet { color: var(--faint); flex-shrink: 0; font-size: 11px; }
+.card-link-item a {
+  color: var(--accent); text-decoration: none; font-size: 11px;
+  font-family: 'DM Mono', monospace; word-break: break-all; line-height: 1.5;
+}
+.card-link-item a:hover { text-decoration: underline; }
+.card-meta-grid { display: flex; flex-direction: column; gap: 5px; }
+.card-meta-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.card-meta-key {
+  font-size: 10px; font-family: 'DM Mono', monospace; color: var(--faint);
+  text-transform: uppercase; letter-spacing: .06em; flex: 0 0 130px;
+}
+.card-meta-val { font-size: 12px; color: var(--muted); flex: 1; }
+.result-external-badge {
+  display: inline-flex; align-items: center;
+  font-size: 9px; font-family: 'DM Mono', monospace; font-weight: 500;
+  padding: 1px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px;
+  background: rgba(37,99,235,.08); color: #2563eb; border: 1px solid rgba(37,99,235,.2);
+}
+.result-link-hint {
+  font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px;
+}
+
+/* ── TOKEN OVERLAY ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); z-index: 999;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.overlay-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 28px 32px; width: 400px; max-width: 90vw;
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+}
+.overlay-title { font-size: 14px; font-weight: 500; }
+.overlay-sub { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.overlay-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 9px 12px; color: var(--text);
+  font-size: 13px; font-family: 'DM Mono', monospace; outline: none;
+}
+.overlay-input:focus { border-color: var(--accent); }
+.overlay-error { font-size: 11px; color: var(--accent3); font-family: 'DM Mono', monospace; display: none; }
+.overlay-btn {
+  background: var(--accent); border: none; border-radius: var(--radius);
+  padding: 9px; color: #fff; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: opacity .15s;
+}
+.overlay-btn:hover { opacity: .85; }
+.overlay-hint { font-size: 11px; color: var(--faint); line-height: 1.5; }
+
+/* ── SUBMISSION EXPLORER ADDITIONS ── */
+.nav-link {
+  font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted);
+  text-decoration: none; padding: 4px 10px; border-radius: var(--radius);
+  border: 1px solid var(--border2); transition: all .15s;
+}
+.nav-link:hover { color: var(--text); border-color: var(--accent); }
+.setup-note {
+  max-width: 520px; margin: 0 auto; padding: 24px; text-align: left;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius-lg); font-size: 12px; color: var(--muted); line-height: 1.7;
+}
+.setup-note strong { color: var(--text); }
+.setup-note code {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  background: var(--surface2); padding: 1px 5px; border-radius: 4px;
+}
+.result-title, .result-abstract, .abstract-preview, .card-meta-val { overflow-wrap: anywhere; }
+.file-badge {
+  display: inline-flex; align-items: center;
+  font-size: 9px; font-family: 'DM Mono', monospace; font-weight: 500;
+  padding: 1px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px;
+  background: rgba(14,168,150,.1); color: var(--accent2); border: 1px solid rgba(14,168,150,.25);
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">SE</div>
+    <h1>Submission Explorer</h1>
+  </div>
+  <div class="header-right">
+    <span class="header-meta">
+      <span class="status-dot loading" id="statusDot"></span>
+      <span id="statusText">Loading…</span>
+    </span>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="explore">Explore</button>
+      <button class="mode-btn" data-mode="search">Search</button>
+    </div>
+    <a class="nav-link" href="index.html">← Resource Explorer</a>
+    <button class="hdr-btn" id="refreshBtn">↺ Refresh</button>
+    <button class="hdr-btn danger" id="tokenBtn">⚙ Token</button>
+  </div>
+</div>
+
+<div class="app" id="exploreWrap">
+  <div class="sidebar">
+    <div class="sidebar-search">
+      <input type="text" id="fieldSearch" placeholder="Search fields…">
+    </div>
+    <div class="field-groups" id="fieldGroups"></div>
+  </div>
+
+  <div class="main-wrap">
+    <div class="main-tabs" id="mainTabs" style="display:none">
+      <button class="tab-btn active" data-tab="values">Values</button>
+      <button class="tab-btn" data-tab="chart">Chart</button>
+    </div>
+    <div class="main" id="main">
+      <div class="intro-state">
+        <div class="intro-icon">◈</div>
+        <div class="intro-title">Select a field to explore</div>
+        <div class="intro-sub">Choose any field from the sidebar once submissions have loaded.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH LAYOUT -->
+<div class="search-wrap" id="searchWrap">
+  <div class="filter-panel">
+    <div class="filter-top">
+      <input class="filter-search-input" id="searchInput" type="text"
+        placeholder="Search titles, abstracts, authors, file names…">
+      <div class="filter-meta-row">
+        <span class="filter-count-label" id="searchResultCount">—</span>
+        <button class="filter-clear-btn" id="clearAllBtn">Clear all</button>
+      </div>
+      <div class="filter-active-label" id="filterActiveLabel"></div>
+    </div>
+    <div class="filter-groups" id="filterGroups"></div>
+  </div>
+
+  <div class="results-panel" id="resultsPanel">
+    <div class="results-hdr">
+      <span class="results-hdr-title">Submissions</span>
+    </div>
+    <div class="results-list" id="resultsList">
+      <div class="no-results">
+        <div class="intro-icon">◈</div>
+        <div class="intro-title">Loading data…</div>
+        <div class="intro-sub">Submissions will appear here once data has loaded.</div>
+      </div>
+    </div>
+    <button class="load-more-btn" id="loadMoreBtn" style="display:none">Load more</button>
+  </div>
+</div>
+
+<!-- TOKEN OVERLAY -->
+<div class="overlay" id="tokenOverlay">
+  <div class="overlay-box">
+    <div class="overlay-title">Connect to Airtable</div>
+    <p class="overlay-sub">Enter your Airtable Personal Access Token. It will be saved in your browser — you won't need to enter it again.</p>
+    <input class="overlay-input" id="tokenInput" type="password" placeholder="pat...">
+    <span class="overlay-error" id="tokenError"></span>
+    <button class="overlay-btn" id="tokenSubmit">Connect →</button>
+    <p class="overlay-hint">Get a token at airtable.com/create/tokens — scope: data.records:read, with access to the submissions base.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ══════════════════════════════════════
+// CONFIG — fill in the IDs from your submissions Airtable base
+//   Base / table / view IDs are in the Airtable URL:
+//   airtable.com/<baseId>/<tableId>/<viewId>
+// ══════════════════════════════════════
+const CONFIG = {
+  baseId:  'appM1xjCOeACQLTlq',
+  tableId: 'tblqkFKlB3ydthQnX',
+  viewId:  'viwk65si9PZojGVLg', // optional — blank reads the whole table
+
+  // Airtable field holding the link to each submitted file in the repo.
+  // (The Resource Explorer uses "URL / Link to Content" / "Resource Direct Link" instead.)
+  repoLinkField: 'Resource Repo Link',
+};
+
+// type:
+//   'categorical' — one value per record, shown as-is
+//   'multi'       — split on comma/semicolon (or Airtable multi-select arrays) into individual values
+//   'text'        — free text, show samples only
+//   'year'        — numeric year, sorted descending
+//   'boolean'     — checkbox
+// Fields listed here that don't exist in the new base are hidden automatically.
+// Fields in the base that aren't listed here are discovered on load (see discoverFields).
+const BASE_FIELDS = [
+  { key: 'Title',                 label: 'Title',                 type: 'text',        color: '#888894', group: 'Content' },
+  { key: 'Abstract / Summary',    label: 'Abstract / Summary',    type: 'text',        color: '#888894', group: 'Content' },
+  { key: 'Author(s)',             label: 'Author(s)',             type: 'multi',       color: '#9b8ff5', group: 'Content' },
+  { key: 'Publication Year',      label: 'Publication Year',      type: 'year',        color: '#d97706', group: 'Content' },
+  { key: 'Area of Emphasis',      label: 'Area of Emphasis',      type: 'categorical', color: '#5b50e8', group: 'Taxonomy' },
+  { key: 'Category',              label: 'Category',              type: 'multi',       color: '#0ea896', group: 'Taxonomy' },
+  { key: 'Subcategory',           label: 'Subcategory',           type: 'categorical', color: '#0ea896', group: 'Taxonomy' },
+  { key: 'Keywords / Tags',       label: 'Keywords / Tags',       type: 'multi',       color: '#c026d3', group: 'Taxonomy' },
+  { key: 'Media Type',            label: 'Media Type',            type: 'categorical', color: '#ea580c', group: 'Format' },
+  { key: 'Publication Type',      label: 'Publication Type',      type: 'multi',       color: '#ea580c', group: 'Format' },
+  { key: 'File Type',             label: 'File Type',             type: 'categorical', color: '#ea580c', group: 'Format' },
+  { key: 'Intended Audience',     label: 'Intended Audience',     type: 'multi',       color: '#db6b1e', group: 'Audience & Scope' },
+  { key: 'Language',              label: 'Language',              type: 'categorical', color: '#888894', group: 'Audience & Scope' },
+  { key: 'Geographic Scope',      label: 'Geographic Scope',      type: 'multi',       color: '#2563eb', group: 'Audience & Scope' },
+  { key: 'Project',               label: 'Project',               type: 'categorical', color: '#16a34a', group: 'Source & Admin' },
+  { key: 'Source System',         label: 'Source System',         type: 'categorical', color: '#d97706', group: 'Source & Admin' },
+  { key: 'Date Added',            label: 'Date Added',            type: 'text',        color: '#888894', group: 'Source & Admin' },
+  { key: 'Status',                label: 'Status',                type: 'categorical', color: '#888894', group: 'Source & Admin' },
+  { key: 'Duplicate Flag',        label: 'Duplicate Flag',        type: 'categorical', color: '#888894', group: 'Source & Admin' },
+  { key: 'External Resource',     label: 'External Resource',     type: 'boolean',     color: '#2563eb', group: 'Source & Admin' },
+];
+const BASE_GROUPS = ['Content', 'Taxonomy', 'Format', 'Audience & Scope', 'Source & Admin'];
+const OTHER_GROUP = 'Other Fields';
+
+// Base fields offered as search facets. Discovered fields with few distinct values are added automatically.
+const FACET_KEYS = [
+  'Publication Year', 'Area of Emphasis', 'Category', 'Subcategory', 'Keywords / Tags',
+  'Media Type', 'Publication Type', 'File Type', 'Geographic Scope', 'Intended Audience',
+  'Project', 'Source System', 'External Resource',
+];
+
+// Fields the result card already shows outside the "Details" section.
+const CARD_SHOWN_KEYS = new Set([
+  'Title', 'Abstract / Summary', 'Author(s)', 'Publication Year',
+  'Area of Emphasis', 'Category', 'Media Type', 'File Type', 'External Resource',
+]);
+
+const AREA_COLORS = { 'Employment': '#5d9632', 'Education': '#522e75', 'Health Care': '#d4652d' };
+const EXTRA_COLORS = ['#0891b2', '#7c3aed', '#be185d', '#65a30d', '#b45309', '#4f46e5', '#0d9488'];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let ALL_RECORDS = [];
+let FIELDS = [];            // BASE_FIELDS present in the data + discovered fields
+let GROUPS = [];
+let FACETS = [];            // field keys shown in the Search filter panel
+let activeField = null;
+let activeTab   = 'values';
+let showAll     = false;
+let chartInst   = null;
+
+let currentMode = 'explore';
+let searchText = '';
+let activeFilters = {};       // fieldKey -> Set<string>
+let filterFieldShowAll = {};  // fieldKey -> bool
+let visibleCount = 0;
+let searchDebounceTimer = null;
+const RESULTS_PER_PAGE = 25;
+const FACET_MAX = 8;
+
+const $ = id => document.getElementById(id);
+const isConfigured = () => !/^YOUR_/.test(CONFIG.baseId) && !/^YOUR_/.test(CONFIG.tableId);
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+const str = v => (v == null ? '' : Array.isArray(v) ? v.join(', ') : String(v));
+const esc = v => str(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const isBlank = v => v == null || (Array.isArray(v) ? v.length === 0 : String(v).trim() === '');
+const fieldDef = key => FIELDS.find(f => f.key === key);
+const colorOf = key => fieldDef(key)?.color || '#888894';
+const safeId = key => key.replace(/\W+/g, '_');
+
+// ══════════════════════════════════════
+// TOKEN
+// ══════════════════════════════════════
+const tokenKey = () => 'se_token_' + CONFIG.baseId;
+function getToken()   { try { return localStorage.getItem(tokenKey()); } catch { return null; } }
+function saveToken(t) { try { localStorage.setItem(tokenKey(), t.trim()); } catch {} }
+function clearToken() { try { localStorage.removeItem(tokenKey()); } catch {} }
+
+function showTokenPrompt(msg) {
+  const el = $('tokenError');
+  el.textContent = msg || '';
+  el.style.display = msg ? 'block' : 'none';
+  $('tokenOverlay').style.display = 'flex';
+  setTimeout(() => $('tokenInput').focus(), 50);
+}
+function hideTokenPrompt() { $('tokenOverlay').style.display = 'none'; }
+
+function submitToken() {
+  const val = $('tokenInput').value.trim();
+  if (!val.startsWith('pat')) {
+    $('tokenError').textContent = 'Token should start with "pat"';
+    $('tokenError').style.display = 'block';
+    return;
+  }
+  saveToken(val);
+  hideTokenPrompt();
+  loadData();
+}
+
+// ══════════════════════════════════════
+// FETCH
+// ══════════════════════════════════════
+function showSetupNote() {
+  setStatus('err', 'Not configured');
+  const note = `<div class="setup-note">
+    <strong>Connect the submissions base</strong><br>
+    Open <code>submissions.html</code> and set <code>CONFIG.baseId</code> and <code>CONFIG.tableId</code>
+    (and optionally <code>viewId</code>) from your submissions Airtable URL:
+    <code>airtable.com/&lt;baseId&gt;/&lt;tableId&gt;/&lt;viewId&gt;</code>.
+  </div>`;
+  $('main').innerHTML = note;
+  $('resultsList').innerHTML = note;
+}
+
+async function loadData() {
+  if (!isConfigured()) { showSetupNote(); return; }
+  const token = getToken();
+  if (!token) { showTokenPrompt(); return; }
+  setStatus('loading', 'Loading…');
+  const records = [];
+  const base = `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.tableId}`;
+  let offset = null;
+  try {
+    do {
+      const params = new URLSearchParams({ pageSize: '100' });
+      if (CONFIG.viewId) params.set('view', CONFIG.viewId);
+      if (offset) params.set('offset', offset);
+      const res = await fetch(`${base}?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 403 || res.status === 401) {
+          clearToken();
+          showTokenPrompt('Token rejected — please re-enter your Airtable token.');
+          setStatus('err', 'Auth failed');
+          return;
+        }
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      records.push(...data.records.map(r => ({ ...r.fields, _id: r.id })));
+      offset = data.offset || null;
+      setStatus('loading', `Loaded ${records.length}…`);
+    } while (offset);
+
+    ALL_RECORDS = records;
+    deriveFileType();
+    discoverFields();
+    setStatus('ok', `${ALL_RECORDS.length.toLocaleString()} submissions · ${new Date().toLocaleTimeString()}`);
+    buildSidebar();
+    if (activeField && !fieldDef(activeField)) resetExplorePanel();
+    else if (activeField) renderPanel();
+    if (currentMode === 'search') buildFilterPanel();
+  } catch (e) {
+    setStatus('err', `Error: ${e.message}`);
+  }
+}
+
+function setStatus(state, text) {
+  $('statusDot').className = `status-dot ${state}`;
+  $('statusText').textContent = text;
+}
+
+// ══════════════════════════════════════
+// FILE LINKS + SCHEMA DISCOVERY
+// ══════════════════════════════════════
+// Every URL in the Resource Repo Link field (handles newline/comma separated and <url> wrapping).
+function repoLinks(r) {
+  const val = r[CONFIG.repoLinkField];
+  if (!val) return [];
+  const urls = Array.isArray(val)
+    ? val.map(v => (v && typeof v === 'object' ? v.url : String(v)))
+    : String(val).match(/https?:\/\/[^\s<>"']+/g) || [];
+  return urls.map(u => String(u).trim().replace(/[,.)]+$/, '')).filter(u => /^https?:\/\//.test(u));
+}
+
+// File name = last path segment of a URL, decoded.
+function fileNameFromUrl(url) {
+  const seg = url.split(/[?#]/)[0].split('/').pop() || '';
+  try { return decodeURIComponent(seg); } catch { return seg; }
+}
+
+const fileNameOf = r => { const first = repoLinks(r)[0]; return first ? fileNameFromUrl(first) : ''; };
+
+// File Type facet derived from the file extension in the repo link, unless the base already has one.
+function deriveFileType() {
+  ALL_RECORDS.forEach(r => {
+    if (!isBlank(r['File Type'])) return;
+    const m = fileNameOf(r).match(/\.([A-Za-z0-9]{2,5})$/);
+    if (m) r['File Type'] = m[1].toUpperCase();
+  });
+}
+
+// Base fields present in the data, plus any other fields found in the records.
+function discoverFields() {
+  const present = new Set();
+  const stats = {}; // key -> { filled, uniq:Set, kind }
+  const skip = new Set(['_id', CONFIG.repoLinkField]);
+  const known = new Set(BASE_FIELDS.map(f => f.key));
+
+  ALL_RECORDS.forEach(r => {
+    Object.keys(r).forEach(k => {
+      if (isBlank(r[k])) return;
+      present.add(k);
+      if (known.has(k) || skip.has(k)) return;
+      const v = r[k];
+      const s = stats[k] || (stats[k] = { filled: 0, uniq: new Set(), kind: null });
+      s.filled++;
+      const kind = Array.isArray(v) ? (typeof v[0] === 'object' ? 'attach' : 'array')
+                 : typeof v === 'boolean' ? 'bool' : 'scalar';
+      s.kind = s.kind && s.kind !== kind ? 'scalar' : kind;
+      if (s.uniq.size < 200) (Array.isArray(v) ? v : [v]).forEach(x => s.uniq.add(String(x)));
+    });
+  });
+
+  const fields = BASE_FIELDS.filter(f => present.has(f.key));
+  let ci = 0;
+  Object.entries(stats).forEach(([key, s]) => {
+    if (s.kind === 'attach') return;
+    const type = s.kind === 'bool'  ? 'boolean'
+               : s.kind === 'array' ? 'multi'
+               : (s.uniq.size <= 40 && s.uniq.size <= Math.max(3, s.filled * 0.5)) ? 'categorical'
+               : 'text';
+    fields.push({ key, label: key, type, color: EXTRA_COLORS[ci++ % EXTRA_COLORS.length], group: OTHER_GROUP, discovered: true });
+  });
+
+  FIELDS = fields;
+  GROUPS = [...BASE_GROUPS, OTHER_GROUP].filter(g => FIELDS.some(f => f.group === g));
+  FACETS = FIELDS
+    .filter(f => f.discovered ? f.type !== 'text' && (stats[f.key]?.uniq.size ?? 0) <= 60 : FACET_KEYS.includes(f.key))
+    .map(f => f.key);
+}
+
+// ══════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════
+function recordValues(r, fd) {
+  const raw = r[fd.key];
+  if (fd.type === 'text' || isBlank(raw)) return [];
+  if (Array.isArray(raw)) return raw.map(v => String(v).trim()).filter(Boolean);
+  const s = String(raw).trim();
+  return fd.type === 'multi' ? s.split(/[,;]+/).map(v => v.trim()).filter(Boolean) : [s];
+}
+
+function getValues(fd) {
+  const counts = {};
+  ALL_RECORDS.forEach(r => recordValues(r, fd).forEach(v => { counts[v] = (counts[v] || 0) + 1; }));
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return fd.type === 'year' ? sorted.sort((a, b) => parseInt(b[0]) - parseInt(a[0])) : sorted;
+}
+
+const getFilled = fd => ALL_RECORDS.filter(r => !isBlank(r[fd.key])).length;
+
+function getSamples(fd, n = 6) {
+  return ALL_RECORDS.filter(r => !isBlank(r[fd.key])).slice(0, n).map(r => str(r[fd.key]).slice(0, 160));
+}
+
+const valueLabel = (fd, v) => (fd.type === 'boolean' && v === 'true') ? 'Yes' : v;
+
+// ══════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════
+function buildSidebar() {
+  const container = $('fieldGroups');
+  container.innerHTML = GROUPS.map(g => {
+    const buttons = FIELDS.filter(f => f.group === g).map(fd => {
+      const badge = fd.type === 'boolean' ? getFilled(fd) : fd.type === 'text' ? '—' : getValues(fd).length;
+      return `<button class="field-btn${activeField === fd.key ? ' active' : ''}" data-key="${esc(fd.key)}">
+        <span class="f-dot" style="background:${fd.color}"></span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(fd.label)}</span>
+        <span class="f-badge">${badge}</span>
+      </button>`;
+    }).join('');
+    return `<div><div class="field-group-label">${esc(g)}</div>${buttons}</div>`;
+  }).join('');
+  filterFields($('fieldSearch').value);
+}
+
+function filterFields(q) {
+  const needle = q.toLowerCase();
+  document.querySelectorAll('#fieldGroups .field-btn').forEach(b => {
+    b.style.display = b.dataset.key.toLowerCase().includes(needle) ? '' : 'none';
+  });
+  document.querySelectorAll('#fieldGroups .field-group-label').forEach(l => l.style.display = q ? 'none' : '');
+}
+
+// ══════════════════════════════════════
+// TABS
+// ══════════════════════════════════════
+function selectField(key) {
+  activeField = key;
+  showAll = false;
+  document.querySelectorAll('#fieldGroups .field-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  const isText = fieldDef(key).type === 'text';
+  $('mainTabs').style.display = 'flex';
+  document.querySelectorAll('.tab-btn').forEach(b => { b.style.display = (isText && b.dataset.tab !== 'values') ? 'none' : ''; });
+  if (isText) setTab('values');
+  renderPanel();
+}
+
+function setTab(name) {
+  activeTab = name;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+}
+
+function resetExplorePanel() {
+  activeField = null;
+  $('mainTabs').style.display = 'none';
+  $('main').innerHTML = `<div class="intro-state">
+    <div class="intro-icon">◈</div>
+    <div class="intro-title">Select a field to explore</div>
+    <div class="intro-sub">Choose any field from the sidebar.</div>
+  </div>`;
+}
+
+function renderPanel() {
+  if (!activeField) return;
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  if (activeTab === 'chart' && fieldDef(activeField)?.type !== 'text') renderChart();
+  else renderValues();
+}
+
+// ══════════════════════════════════════
+// VALUES TAB
+// ══════════════════════════════════════
+function fieldTitleHtml(fd, sub) {
+  return `<div>
+    <div class="field-title">
+      <span class="f-dot" style="background:${fd.color};width:10px;height:10px;border-radius:50%"></span>
+      ${esc(fd.label)} ${sub.tag || ''}
+    </div>
+    <div class="field-sub">${sub.text}</div>
+  </div>`;
+}
+
+function renderValues() {
+  const fd = fieldDef(activeField);
+  if (!fd) return;
+  const total  = ALL_RECORDS.length;
+  const filled = getFilled(fd);
+  const pct    = total ? Math.round(filled / total * 100) : 0;
+  const isText = fd.type === 'text';
+  const isMulti = fd.type === 'multi';
+
+  const tag = isMulti ? '<span class="tag tag-multi">SPLIT MULTI-VALUE</span>'
+            : isText  ? '<span class="tag tag-text">FREE TEXT</span>' : '';
+  const vals = isText ? [] : getValues(fd);
+
+  let html = fieldTitleHtml(fd, { tag, text: esc(fd.group) + (fd.discovered ? ' · auto-detected' : '') }) + `
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Total submissions</div><div class="stat-val">${total.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Filled</div><div class="stat-val">${filled.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Coverage</div><div class="stat-val">${pct}<small>%</small></div></div>
+      ${isText ? '' : `<div class="stat-card"><div class="stat-label">Unique values</div><div class="stat-val">${vals.length.toLocaleString()}</div></div>`}
+    </div>
+    <div>
+      <div class="section-label">Coverage</div>
+      <div class="coverage-wrap">
+        <div class="coverage-track"><div class="coverage-fill" style="width:${pct}%;background:${fd.color}"></div></div>
+        <div class="coverage-label">${pct}%</div>
+      </div>
+    </div>`;
+
+  if (isText) {
+    const samples = getSamples(fd);
+    html += `<div><div class="section-label">Sample values</div>
+      <div class="sample-box">${samples.length
+        ? samples.map(s => `<div class="sample-item">${esc(s)}</div>`).join('')
+        : '<div class="sample-item" style="color:var(--faint)">No values found</div>'}
+      </div></div>`;
+  } else {
+    const display = showAll ? vals : vals.slice(0, 20);
+    const maxC = vals[0]?.[1] || 1;
+    if (isMulti) {
+      html += `<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:2px 0 8px">
+        Values are split by comma/semicolon — each individual term is counted separately.
+      </div>`;
+    }
+    html += `<div><div class="section-label">Value distribution <span style="color:var(--faint);font-weight:400">(${vals.length} unique)</span></div>
+      <div class="bar-list">${display.map(([v, c]) => {
+        const label = valueLabel(fd, v);
+        return `<div class="bar-row">
+          <div class="bar-label" title="${esc(label)}">${esc(label)}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c / maxC * 100)}%;background:${fd.color}"></div></div>
+          <div class="bar-count">${c}</div>
+        </div>`;
+      }).join('')}</div>
+      ${!showAll && vals.length > 20 ? `<button class="show-more-btn" id="showAllBtn">Show all ${vals.length} values ↓</button>` : ''}
+    </div>`;
+  }
+  $('main').innerHTML = html;
+}
+
+// ══════════════════════════════════════
+// CHART TAB
+// ══════════════════════════════════════
+function renderChart() {
+  const fd = fieldDef(activeField);
+  if (!fd) return;
+  const vals   = getValues(fd).slice(0, 20);
+  const isYear = fd.type === 'year';
+  const labels = vals.map(([v]) => { const l = valueLabel(fd, v); return l.length > 18 ? l.slice(0, 16) + '…' : l; });
+  const counts = vals.map(([, c]) => c);
+  const barH   = isYear ? 220 : Math.max(220, vals.length * 30 + 60);
+
+  $('main').innerHTML = fieldTitleHtml(fd, { text: `Top ${vals.length} values by submission count` }) + `
+    <div class="chart-wrap" style="height:${barH}px">
+      <canvas id="fieldChart" role="img" aria-label="Bar chart of ${esc(fd.label)} value distribution">
+        ${esc(vals.map(([v, c]) => `${v}: ${c}`).join(', '))}
+      </canvas>
+    </div>`;
+
+  chartInst = new Chart($('fieldChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Submissions', data: counts, backgroundColor: fd.color + 'cc', borderColor: fd.color, borderWidth: 0.5, borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: isYear ? 'x' : 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed[isYear ? 'y' : 'x']} submissions` } } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { color: '#888', font: { size: 11 }, maxRotation: isYear ? 45 : 0 } },
+        y: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { color: '#888', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// MODE SWITCH
+// ══════════════════════════════════════
+function switchMode(mode) {
+  currentMode = mode;
+  $('exploreWrap').classList.toggle('hidden', mode === 'search');
+  $('searchWrap').classList.toggle('visible', mode === 'search');
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  if (mode === 'search' && ALL_RECORDS.length) buildFilterPanel();
+}
+
+// ══════════════════════════════════════
+// SEARCH / FILTER MODE
+// ══════════════════════════════════════
+function toggleFilter(fieldKey, value, checked) {
+  if (!activeFilters[fieldKey]) activeFilters[fieldKey] = new Set();
+  if (checked) activeFilters[fieldKey].add(value);
+  else activeFilters[fieldKey].delete(value);
+
+  const badge = $('fbadge-' + safeId(fieldKey));
+  if (badge) {
+    const cnt = activeFilters[fieldKey].size;
+    badge.textContent = cnt;
+    badge.style.display = cnt ? '' : 'none';
+  }
+  visibleCount = 0;
+  renderResults();
+  updateFilterActiveLabel();
+}
+
+function clearAllFilters() {
+  searchText = '';
+  activeFilters = {};
+  filterFieldShowAll = {};
+  visibleCount = 0;
+  $('searchInput').value = '';
+  buildFilterPanel();
+}
+
+function facetChecklistHtml(fd, vals) {
+  const selected = activeFilters[fd.key] || new Set();
+  const display = filterFieldShowAll[fd.key] ? vals : vals.slice(0, FACET_MAX);
+  return display.map(([v, c]) => {
+    const label = valueLabel(fd, v);
+    return `<label class="filter-check">
+      <input type="checkbox" ${selected.has(v) ? 'checked' : ''} data-field="${esc(fd.key)}" data-value="${esc(v)}">
+      <span class="filter-check-label" title="${esc(label)}">${esc(label)}</span>
+      <span class="filter-check-cnt">${c}</span>
+    </label>`;
+  }).join('');
+}
+
+const facetMoreLabel = (fd, vals) =>
+  filterFieldShowAll[fd.key] ? 'Show less ↑' : `+${vals.length - FACET_MAX} more`;
+
+function toggleFilterShowAll(fieldKey) {
+  const fd = fieldDef(fieldKey);
+  if (!fd) return;
+  filterFieldShowAll[fieldKey] = !filterFieldShowAll[fieldKey];
+  const vals = getValues(fd);
+  const id = safeId(fieldKey);
+  $('fcl-' + id).innerHTML = facetChecklistHtml(fd, vals);
+  $('fmore-' + id).textContent = facetMoreLabel(fd, vals);
+}
+
+function buildFilterPanel() {
+  const html = GROUPS.map(group => {
+    const facets = FACETS.map(fieldDef).filter(fd => fd && fd.group === group);
+    const inner = facets.map(fd => {
+      const vals = getValues(fd);
+      if (!vals.length) return '';
+      const id = safeId(fd.key);
+      const cnt = (activeFilters[fd.key] || new Set()).size;
+      return `<div>
+        <div class="filter-field-label">
+          <span class="f-dot" style="background:${fd.color}"></span>
+          <span style="flex:1">${esc(fd.label)}</span>
+          <span class="filter-active-badge" id="fbadge-${id}" style="display:${cnt ? '' : 'none'}">${cnt || ''}</span>
+        </div>
+        <div class="filter-check-list" id="fcl-${id}">${facetChecklistHtml(fd, vals)}</div>
+        ${vals.length > FACET_MAX ? `<button class="filter-show-more" id="fmore-${id}" data-fieldkey="${esc(fd.key)}">${facetMoreLabel(fd, vals)}</button>` : ''}
+      </div>`;
+    }).join('');
+    return inner ? `<div class="filter-group"><div class="filter-group-hdr">${esc(group)}</div>${inner}</div>` : '';
+  }).join('');
+
+  $('filterGroups').innerHTML = html;
+  visibleCount = 0;
+  renderResults();
+  updateFilterActiveLabel();
+}
+
+function updateFilterActiveLabel() {
+  const total = Object.values(activeFilters).reduce((s, set) => s + set.size, 0) + (searchText ? 1 : 0);
+  $('filterActiveLabel').textContent = total ? `${total} filter${total > 1 ? 's' : ''} active` : '';
+}
+
+function getFilteredRecords() {
+  const q = searchText.toLowerCase();
+  const textKeys = ['Title', 'Abstract / Summary', 'Author(s)',
+    ...FIELDS.filter(f => f.discovered && f.type === 'text').map(f => f.key)];
+
+  return ALL_RECORDS.filter(r => {
+    if (q && ![...textKeys.map(k => str(r[k])), fileNameOf(r)].join(' ').toLowerCase().includes(q)) return false;
+
+    // AND across fields, OR within a field's selected values
+    for (const [fieldKey, selected] of Object.entries(activeFilters)) {
+      if (!selected.size) continue;
+      const fd = fieldDef(fieldKey);
+      if (fd && !recordValues(r, fd).some(v => selected.has(v))) return false;
+    }
+    return true;
+  });
+}
+
+function renderResults() {
+  if (!ALL_RECORDS.length) return;
+  const filtered = getFilteredRecords();
+  const pageEnd = visibleCount + RESULTS_PER_PAGE;
+
+  $('searchResultCount').textContent = `${filtered.length.toLocaleString()} result${filtered.length !== 1 ? 's' : ''}`;
+  const container = $('resultsList');
+  const loadMore = $('loadMoreBtn');
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="no-results">
+      <div class="intro-icon">◈</div>
+      <div class="intro-title">No matching results</div>
+      <div class="intro-sub">Try removing some filters or broadening your search.</div>
+    </div>`;
+    loadMore.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = filtered.slice(0, pageEnd).map(renderResultCard).join('');
+  if (filtered.length > pageEnd) {
+    loadMore.style.display = '';
+    loadMore.textContent = `Load more (${(filtered.length - pageEnd).toLocaleString()} remaining)`;
+  } else {
+    loadMore.style.display = 'none';
+  }
+}
+
+function loadMoreResults() {
+  visibleCount += RESULTS_PER_PAGE;
+  renderResults();
+}
+
+function renderResultCard(r) {
+  const fname      = fileNameOf(r);
+  const title      = esc(r['Title']) || esc(fname) || '(untitled)';
+  const year       = str(r['Publication Year']);
+  const rawAuth    = str(r['Author(s)']);
+  const category   = esc(r['Category']);
+  const area       = esc(r['Area of Emphasis']);
+  const media      = esc(r['Media Type']);
+  const fileType   = esc(r['File Type']);
+  const rawAbs     = str(r['Abstract / Summary']);
+  const isExternal = r['External Resource'] === true;
+  const recId      = r._id || '';
+
+  const links       = repoLinks(r);
+  const airtableUrl = recId ? `https://airtable.com/${CONFIG.baseId}/${CONFIG.tableId}/${recId}` : '';
+
+  const SNIP = 220;
+  const absIsTruncated = rawAbs.length > SNIP;
+  const absSnippet = absIsTruncated ? esc(rawAbs.slice(0, SNIP)) + '…' : esc(rawAbs);
+  const authorStr = rawAuth.length > 90 ? esc(rawAuth.slice(0, 90)) + '…' : esc(rawAuth);
+
+  const areaStyle = raw => {
+    const bg = AREA_COLORS[raw] || colorOf('Area of Emphasis');
+    return `background:${bg};color:#fff;border-color:${bg}`;
+  };
+  const linkA = (href, text, cls = 'result-link') =>
+    `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+
+  // ── collapsed link row ──
+  let collapsedLinks = '';
+  if (links.length) {
+    collapsedLinks = `<div class="result-links">
+      ${linkA(links[0], '↗ View content')}
+      ${links.length > 1 ? `<span class="result-link-hint" style="margin-top:0">${links.length} links — expand to view</span>` : ''}
+    </div>`;
+  }
+
+  // ── expanded detail ──
+  let detail = '';
+  if (absIsTruncated) {
+    detail += `<div><div class="card-section-label">Abstract</div><div class="result-abstract">${esc(rawAbs)}</div></div>`;
+  }
+  if (links.length > 1) {
+    detail += `<div><div class="card-section-label">Resource Repo Links</div><div class="card-link-list">
+      ${links.map(u => `<div class="card-link-item"><span class="card-link-bullet">↗</span>${linkA(u, esc(u), '')}</div>`).join('')}
+    </div></div>`;
+  }
+
+  const metaRows = FIELDS
+    .filter(f => !CARD_SHOWN_KEYS.has(f.key) && !isBlank(r[f.key]))
+    .map(f => ({ label: f.label, value: valueLabel(f, str(r[f.key])) }));
+  if (metaRows.length) {
+    detail += `<div><div class="card-section-label">Details</div><div class="card-meta-grid">
+      ${metaRows.map(m => `<div class="card-meta-row">
+        <span class="card-meta-key">${esc(m.label)}</span>
+        <span class="card-meta-val">${esc(m.value)}</span>
+      </div>`).join('')}
+    </div></div>`;
+  }
+  if (airtableUrl) {
+    detail += `<div class="result-links">${linkA(airtableUrl, '⊞ Open in Airtable', 'result-link secondary')}</div>`;
+  }
+
+  return `<div class="result-card">
+    <div class="result-title">${title}${fileType ? `<span class="file-badge">${fileType}</span>` : ''}${isExternal ? '<span class="result-external-badge">External</span>' : ''}</div>
+    ${authorStr || year ? `<div class="result-byline">
+      ${authorStr ? `<span class="result-author">${authorStr}</span>` : ''}
+      ${year ? `<span class="result-year">${esc(year)}</span>` : ''}
+    </div>` : ''}
+    ${area || category || media ? `<div class="result-tags">
+      ${area     ? `<span class="result-tag" style="${areaStyle(str(r['Area of Emphasis']))}">${area}</span>` : ''}
+      ${category ? `<span class="result-tag" style="color:${colorOf('Category')};border-color:${colorOf('Category')}33">${category}</span>` : ''}
+      ${media    ? `<span class="result-tag" style="color:${colorOf('Media Type')};border-color:${colorOf('Media Type')}33">${media}</span>` : ''}
+    </div>` : ''}
+    ${absSnippet ? `<div class="abstract-preview">${absSnippet}</div>` : ''}
+    ${collapsedLinks}
+    ${detail ? `<div class="card-detail">${detail}</div><button class="card-more-btn">More ↓</button>` : ''}
+  </div>`;
+}
+
+// ══════════════════════════════════════
+// EVENTS + BOOT
+// ══════════════════════════════════════
+document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => switchMode(b.dataset.mode)));
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); renderPanel(); }));
+$('refreshBtn').addEventListener('click', loadData);
+$('tokenBtn').addEventListener('click', () => { clearToken(); showTokenPrompt(); });
+$('tokenSubmit').addEventListener('click', submitToken);
+$('tokenInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitToken(); });
+$('fieldSearch').addEventListener('input', e => filterFields(e.target.value));
+$('clearAllBtn').addEventListener('click', clearAllFilters);
+$('loadMoreBtn').addEventListener('click', loadMoreResults);
+
+$('fieldGroups').addEventListener('click', e => {
+  const btn = e.target.closest('.field-btn');
+  if (btn) selectField(btn.dataset.key);
+});
+$('main').addEventListener('click', e => {
+  if (e.target.closest('#showAllBtn')) { showAll = true; renderPanel(); }
+});
+$('searchInput').addEventListener('input', e => {
+  clearTimeout(searchDebounceTimer);
+  const val = e.target.value;
+  searchDebounceTimer = setTimeout(() => {
+    searchText = val;
+    visibleCount = 0;
+    renderResults();
+    updateFilterActiveLabel();
+  }, 200);
+});
+$('filterGroups').addEventListener('change', e => {
+  if (e.target.type === 'checkbox') toggleFilter(e.target.dataset.field, e.target.dataset.value, e.target.checked);
+});
+$('filterGroups').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-show-more');
+  if (btn) toggleFilterShowAll(btn.dataset.fieldkey);
+});
+$('resultsList').addEventListener('click', e => {
+  const btn = e.target.closest('.card-more-btn');
+  if (!btn) return;
+  const expanded = btn.closest('.result-card').classList.toggle('expanded');
+  btn.textContent = expanded ? 'Less ↑' : 'More ↓';
+});
+
+if (!isConfigured()) showSetupNote();
+else if (getToken()) loadData();
+else showTokenPrompt();
+</script>
+</body>
+</html>
