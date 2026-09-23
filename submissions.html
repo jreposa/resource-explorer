@@ -1020,15 +1020,10 @@ function toggleFilter(fieldKey, value, checked) {
   if (checked) activeFilters[fieldKey].add(value);
   else activeFilters[fieldKey].delete(value);
 
-  const badge = $('fbadge-' + safeId(fieldKey));
-  if (badge) {
-    const cnt = activeFilters[fieldKey].size;
-    badge.textContent = cnt;
-    badge.style.display = cnt ? '' : 'none';
-  }
+  // Every facet's available values depend on every other facet's selection, so the whole
+  // panel is rebuilt (not just this field's checklist) whenever a filter changes.
   visibleCount = 0;
-  renderResults();
-  updateFilterActiveLabel();
+  buildFilterPanel();
 }
 
 function clearAllFilters() {
@@ -1060,7 +1055,7 @@ function toggleFilterShowAll(fieldKey) {
   const fd = fieldDef(fieldKey);
   if (!fd) return;
   filterFieldShowAll[fieldKey] = !filterFieldShowAll[fieldKey];
-  const vals = getValues(fd);
+  const vals = getFacetValues(fd);
   const id = safeId(fieldKey);
   $('fcl-' + id).innerHTML = facetChecklistHtml(fd, vals);
   $('fmore-' + id).textContent = facetMoreLabel(fd, vals);
@@ -1070,7 +1065,7 @@ function buildFilterPanel() {
   const html = GROUPS.map(group => {
     const facets = FACETS.map(fieldDef).filter(fd => fd && fd.group === group);
     const inner = facets.map(fd => {
-      const vals = getValues(fd);
+      const vals = getFacetValues(fd);
       if (!vals.length) return '';
       const id = safeId(fd.key);
       const cnt = (activeFilters[fd.key] || new Set()).size;
@@ -1098,22 +1093,38 @@ function updateFilterActiveLabel() {
   $('filterActiveLabel').textContent = total ? `${total} filter${total > 1 ? 's' : ''} active` : '';
 }
 
+// Does record r satisfy the search text and the active filters, excluding one field's own
+// filter (so a facet can show what's still reachable, and so the results list can AND them all).
+function matchesFilters(r, excludeField) {
+  if (searchText) {
+    const q = searchText.toLowerCase();
+    const textKeys = ['Title', 'Abstract / Summary', 'Author(s)',
+      ...FIELDS.filter(f => f.discovered && f.type === 'text').map(f => f.key)];
+    if (![...textKeys.map(k => str(r[k])), fileNameOf(r)].join(' ').toLowerCase().includes(q)) return false;
+  }
+  // AND across fields, OR within a field's selected values
+  for (const [fieldKey, selected] of Object.entries(activeFilters)) {
+    if (fieldKey === excludeField || !selected.size) continue;
+    const fd = fieldDef(fieldKey);
+    if (fd && !recordValues(r, fd).some(v => selected.has(v))) return false;
+  }
+  return true;
+}
+
 function getFilteredRecords() {
-  const q = searchText.toLowerCase();
-  const textKeys = ['Title', 'Abstract / Summary', 'Author(s)',
-    ...FIELDS.filter(f => f.discovered && f.type === 'text').map(f => f.key)];
+  return ALL_RECORDS.filter(r => matchesFilters(r, null));
+}
 
-  return ALL_RECORDS.filter(r => {
-    if (q && ![...textKeys.map(k => str(r[k])), fileNameOf(r)].join(' ').toLowerCase().includes(q)) return false;
-
-    // AND across fields, OR within a field's selected values
-    for (const [fieldKey, selected] of Object.entries(activeFilters)) {
-      if (!selected.size) continue;
-      const fd = fieldDef(fieldKey);
-      if (fd && !recordValues(r, fd).some(v => selected.has(v))) return false;
-    }
-    return true;
-  });
+// Values available for a facet given every OTHER active filter (cascading facets): selecting
+// Category "Systems Change" narrows Subcategory to only subcategories that co-occur with it.
+function getFacetValues(fd) {
+  const context = ALL_RECORDS.filter(r => matchesFilters(r, fd.key));
+  const counts = {};
+  context.forEach(r => recordValues(r, fd).forEach(v => { counts[v] = (counts[v] || 0) + 1; }));
+  // Keep already-selected values visible (as 0-count) so they can still be unchecked.
+  (activeFilters[fd.key] || new Set()).forEach(v => { if (!(v in counts)) counts[v] = 0; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return fd.type === 'year' ? sorted.sort((a, b) => parseInt(b[0]) - parseInt(a[0])) : sorted;
 }
 
 function renderResults() {
