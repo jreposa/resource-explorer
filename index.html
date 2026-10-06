@@ -526,10 +526,22 @@ body {
 // CONFIG
 // ══════════════════════════════════════
 const CONFIG = {
-  baseId:  'appajgKVCtfHwvgfi',
-  tableId: 'tblAgyvQzBAqF72ae',
-  viewId:  'viwVgPBdatwEXo3ub',
+  baseId:  'applTSkidieMbEbnu',
+  tableId: 'tblJjRwZpmXZos1RM',
+  viewId:  'viw3Am6GIVqYIWxsd',
 };
+
+// This table holds every Area of Emphasis; the Resource Explorer only shows Employment.
+// Checks a couple of likely field-name spellings in case the base renames this column.
+const AREA_FILTER_VALUE = 'employment';
+const AREA_FILTER_FIELD_CANDIDATES = ['Area of Emphasis', 'Areas of Emphasis'];
+function matchesAreaFilter(r) {
+  const key = AREA_FILTER_FIELD_CANDIDATES.find(k => r[k] !== undefined);
+  if (!key) return true; // field not found on this record — don't accidentally hide everything
+  const raw = r[key];
+  const vals = Array.isArray(raw) ? raw : String(raw ?? '').split(/[,;]+/);
+  return vals.some(v => String(v).trim().toLowerCase() === AREA_FILTER_VALUE);
+}
 
 // type:
 //   'categorical' — one value per record, shown as-is
@@ -577,14 +589,28 @@ const RELATED = {
   'Geographic Scope':    ['Area of Emphasis', 'Source System', 'Publication Year'],
 };
 
+// Fields present in the base but not listed in FIELD_DEFS are added automatically under
+// "Other Fields" when data loads — see discoverFields(). Known link fields are skipped there
+// since the result card already renders them as links, not generic metadata.
+const OTHER_GROUP = 'Other Fields';
+const EXTRA_COLORS = ['#0891b2', '#7c3aed', '#be185d', '#65a30d', '#b45309', '#4f46e5', '#0d9488'];
+const LINK_FIELD_KEYS = ['URL / Link to Content', 'Resource Link', 'Resource Direct Link', 'Resource Repo Link', 'Attachment(s)'];
+
 // ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
 let ALL_RECORDS = [];
+let FIELDS      = FIELD_DEFS.slice(); // FIELD_DEFS plus fields discovered on load
+let ALL_GROUPS  = GROUPS.slice();
+let FACET_KEYS  = [];                 // filled in by discoverFields() once FILTER_FIELDS is in scope
 let activeField = null;
 let activeTab   = 'values';
 let showAll     = false;
 let chartInst   = null;
+
+const fieldDef = key => FIELDS.find(f => f.key === key);
+const isBlank  = v => v == null || (Array.isArray(v) ? v.length === 0 : String(v).trim() === '');
+const valueLabel = (fd, v) => (fd.type === 'boolean' && v === 'true') ? 'Yes' : (fd.type === 'boolean' && v === 'false') ? 'No' : v;
 
 // ══════════════════════════════════════
 // TOKEN
@@ -644,7 +670,10 @@ async function loadData() {
       offset = data.offset || null;
       setStatus('loading', `Loaded ${ALL_RECORDS.length}…`);
     } while (offset);
+    ALL_RECORDS = ALL_RECORDS.filter(matchesAreaFilter);
+    discoverFields();
     setStatus('ok', `${ALL_RECORDS.length.toLocaleString()} records · ${new Date().toLocaleTimeString()}`);
+    if (activeField && !fieldDef(activeField)) activeField = null;
     buildSidebar();
     if (activeField) renderPanel();
     if (currentMode === 'search') buildFilterPanel();
@@ -664,8 +693,8 @@ function setStatus(state, text) {
 function buildSidebar() {
   const container = document.getElementById('fieldGroups');
   container.innerHTML = '';
-  GROUPS.forEach(g => {
-    const fields = FIELD_DEFS.filter(f => f.group === g);
+  ALL_GROUPS.forEach(g => {
+    const fields = FIELDS.filter(f => f.group === g);
     const grpEl = document.createElement('div');
     grpEl.innerHTML = `<div class="field-group-label">${g}</div>`;
     fields.forEach(fd => {
@@ -733,6 +762,45 @@ function getSamples(fd, n = 6) {
     .map(r => String(r[fd.key]).slice(0, 160));
 }
 
+// FIELD_DEFS plus any other fields found in the records, grouped under "Other Fields".
+// Base fields are always kept (even if currently empty) since several places below assume
+// 'Area of Emphasis' / 'Category' / 'Media Type' exist.
+function discoverFields() {
+  const stats = {}; // key -> { filled, uniq:Set, kind }
+  const skip  = new Set(['_id', ...LINK_FIELD_KEYS]);
+  const known = new Set(FIELD_DEFS.map(f => f.key));
+
+  ALL_RECORDS.forEach(r => {
+    Object.keys(r).forEach(k => {
+      if (isBlank(r[k])) return;
+      if (known.has(k) || skip.has(k)) return;
+      const v = r[k];
+      const s = stats[k] || (stats[k] = { filled: 0, uniq: new Set(), kind: null });
+      s.filled++;
+      const kind = Array.isArray(v) ? (typeof v[0] === 'object' ? 'attach' : 'array')
+                 : typeof v === 'boolean' ? 'bool' : 'scalar';
+      s.kind = s.kind && s.kind !== kind ? 'scalar' : kind;
+      if (s.uniq.size < 200) (Array.isArray(v) ? v : [v]).forEach(x => s.uniq.add(String(x)));
+    });
+  });
+
+  const fields = FIELD_DEFS.slice();
+  let ci = 0;
+  Object.entries(stats).forEach(([key, s]) => {
+    if (s.kind === 'attach') return; // attachment-style fields aren't shown as generic metadata
+    const type = s.kind === 'bool'  ? 'boolean'
+               : s.kind === 'array' ? 'multi'
+               : (s.uniq.size <= 40 && s.uniq.size <= Math.max(3, s.filled * 0.5)) ? 'categorical'
+               : 'text';
+    fields.push({ key, label: key, type, color: EXTRA_COLORS[ci++ % EXTRA_COLORS.length], group: OTHER_GROUP, discovered: true });
+  });
+
+  FIELDS = fields;
+  ALL_GROUPS = [...GROUPS, OTHER_GROUP].filter(g => FIELDS.some(f => f.group === g));
+  FACET_KEYS = [...FILTER_FIELDS.map(f => f.key),
+    ...fields.filter(f => f.discovered && f.type !== 'text' && (stats[f.key]?.uniq.size ?? 0) <= 60).map(f => f.key)];
+}
+
 // ══════════════════════════════════════
 // TABS
 // ══════════════════════════════════════
@@ -740,7 +808,7 @@ function selectField(key) {
   activeField = key;
   showAll = false;
   document.querySelectorAll('.field-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
-  const fd = FIELD_DEFS.find(f => f.key === key);
+  const fd = fieldDef(key);
   const isText = fd.type === 'text';
   // show/hide tabs — text fields only get Values tab
   document.getElementById('mainTabs').style.display = 'flex';
@@ -769,7 +837,7 @@ function renderPanel() {
 // VALUES TAB
 // ══════════════════════════════════════
 function renderValues() {
-  const fd = FIELD_DEFS.find(f => f.key === activeField);
+  const fd = fieldDef(activeField);
   if (!fd) return;
   const total  = ALL_RECORDS.length;
   const filled = getFilled(fd);
@@ -853,7 +921,7 @@ function renderValues() {
 // CHART TAB
 // ══════════════════════════════════════
 function renderChart() {
-  const fd   = FIELD_DEFS.find(f => f.key === activeField);
+  const fd   = fieldDef(activeField);
   if (!fd) return;
   if (chartInst) { chartInst.destroy(); chartInst = null; }
 
@@ -900,7 +968,7 @@ function renderChart() {
 // RELATED TAB
 // ══════════════════════════════════════
 function renderRelated() {
-  const fd   = FIELD_DEFS.find(f => f.key === activeField);
+  const fd   = fieldDef(activeField);
   if (!fd) return;
   const rels = RELATED[fd.key] || [];
 
@@ -944,7 +1012,7 @@ function renderRelated() {
       <p class="related-note">Fields commonly co-populated or structurally linked to <strong>${fd.label}</strong>. Click to explore.</p>
       <div class="chips">
         ${rels.map(r => {
-          const rf = FIELD_DEFS.find(f => f.key === r);
+          const rf = fieldDef(r);
           return rf ? `<span class="chip" onclick="selectField('${r}')" style="cursor:pointer" onmouseover="this.style.borderColor='${rf.color}'" onmouseout="this.style.borderColor=''">
             <span class="f-dot" style="background:${rf.color}"></span>${rf.label}
           </span>` : '';
@@ -969,7 +1037,8 @@ let searchResultOffset = 0;
 let searchDebounceTimer = null;
 const RESULTS_PER_PAGE = 25;
 
-// Fields available as filter facets, in display order
+// Base fields available as filter facets, in display order. Discovered fields with few enough
+// distinct values are appended automatically — see discoverFields() / FACET_KEYS.
 const FILTER_FIELDS = [
   { key: 'Publication Year',  group: 'Content' },
   { key: 'Area of Emphasis',  group: 'Taxonomy' },
@@ -1059,7 +1128,7 @@ function toggleFilterShowAll(fieldKey) {
 }
 
 function rebuildFieldChecklist(fieldKey) {
-  const fd = FIELD_DEFS.find(f => f.key === fieldKey);
+  const fd = fieldDef(fieldKey);
   if (!fd) return;
   const safeName = fieldKey.replace(/\W+/g, '_');
   const container = document.getElementById('fcl-' + safeName);
@@ -1098,17 +1167,15 @@ function buildFilterPanel() {
   const container = document.getElementById('filterGroups');
   container.innerHTML = '';
 
-  GROUPS.forEach(group => {
-    const fields = FILTER_FIELDS.filter(f => f.group === group);
+  ALL_GROUPS.forEach(group => {
+    const fields = FACET_KEYS.map(fieldDef).filter(fd => fd && fd.group === group);
     if (!fields.length) return;
 
     const grpEl = document.createElement('div');
     grpEl.className = 'filter-group';
     let inner = `<div class="filter-group-hdr">${group}</div>`;
 
-    fields.forEach(ff => {
-      const fd = FIELD_DEFS.find(f => f.key === ff.key);
-      if (!fd) return;
+    fields.forEach(fd => {
       const vals = getValues(fd);
       if (!vals.length) return;
 
@@ -1174,7 +1241,7 @@ function getFilteredRecords() {
     // Facet filters: AND across fields, OR within a field's selected values
     for (const [fieldKey, selectedVals] of Object.entries(activeFilters)) {
       if (!selectedVals.size) continue;
-      const fd = FIELD_DEFS.find(f => f.key === fieldKey);
+      const fd = fieldDef(fieldKey);
       if (!fd) continue;
       const raw = r[fieldKey];
       if (raw == null || String(raw).trim() === '') return false;
@@ -1241,9 +1308,9 @@ function parseDirectLinks(val) {
 }
 
 function renderResultCard(r) {
-  const fd_area  = FIELD_DEFS.find(f => f.key === 'Area of Emphasis');
-  const fd_cat   = FIELD_DEFS.find(f => f.key === 'Category');
-  const fd_media = FIELD_DEFS.find(f => f.key === 'Media Type');
+  const fd_area  = fieldDef('Area of Emphasis');
+  const fd_cat   = fieldDef('Category');
+  const fd_media = fieldDef('Media Type');
 
   const AREA_COLORS = { 'Employment': '#5d9632', 'Education': '#522e75', 'Health Care': '#d4652d' };
   const areaTagStyle = raw => {
@@ -1263,14 +1330,13 @@ function renderResultCard(r) {
   const media      = esc(r['Media Type']);
   const rawAbs     = str(r['Abstract / Summary']);
   const isExternal = r['External Resource'] === true;
-  const recId      = r._id || '';
 
   const cleanUrl = u => str(u).trim().replace(/^<+|>+$/g, '').trim();
-  const directLinks  = parseDirectLinks(r['Resource Direct Link']);
+  // Prefer "Resource Direct Link"; if it's empty, fall back to "Resource Repo Link".
+  const directLinks  = parseDirectLinks(r['Resource Direct Link']).length
+    ? parseDirectLinks(r['Resource Direct Link'])
+    : parseDirectLinks(r['Resource Repo Link']);
   const contentUrl   = cleanUrl(r['URL / Link to Content'] || r['Resource Link']);
-  const airtableUrl  = recId
-    ? `https://airtable.com/${CONFIG.baseId}/${CONFIG.tableId}/${recId}`
-    : '';
 
   // Collapsed abstract: first 220 chars
   const SNIP = 220;
@@ -1322,7 +1388,8 @@ function renderResultCard(r) {
     </div>`;
   }
 
-  // Extra metadata rows
+  // Extra metadata rows — fixed known fields, plus anything auto-discovered from the base
+  // that isn't already shown elsewhere on the card.
   const metaRows = [
     { key: 'Subcategory',        label: 'Subcategory' },
     { key: 'Keywords / Tags',    label: 'Keywords' },
@@ -1330,7 +1397,8 @@ function renderResultCard(r) {
     { key: 'Geographic Scope',   label: 'Geographic scope' },
     { key: 'Publication Type',   label: 'Publication type' },
     { key: 'Language',           label: 'Language' },
-  ].filter(m => str(r[m.key]));
+    ...FIELDS.filter(f => f.discovered).map(f => ({ key: f.key, label: f.label })),
+  ].filter(m => !isBlank(r[m.key]));
 
   if (metaRows.length) {
     detailHtml += `<div>
@@ -1338,15 +1406,9 @@ function renderResultCard(r) {
       <div class="card-meta-grid">
         ${metaRows.map(m => `<div class="card-meta-row">
           <span class="card-meta-key">${m.label}</span>
-          <span class="card-meta-val">${esc(r[m.key])}</span>
+          <span class="card-meta-val">${esc(valueLabel(fieldDef(m.key), str(r[m.key])))}</span>
         </div>`).join('')}
       </div>
-    </div>`;
-  }
-
-  if (airtableUrl) {
-    detailHtml += `<div class="result-links">
-      <a class="result-link secondary" href="${escAttr(airtableUrl)}" target="_blank" rel="noopener">⊞ Open in Airtable</a>
     </div>`;
   }
 
