@@ -595,6 +595,8 @@ const RELATED = {
 const OTHER_GROUP = 'Other Fields';
 const EXTRA_COLORS = ['#0891b2', '#7c3aed', '#be185d', '#65a30d', '#b45309', '#4f46e5', '#0d9488'];
 const LINK_FIELD_KEYS = ['URL / Link to Content', 'Resource Link', 'Resource Direct Link', 'Resource Repo Link', 'Attachment(s)'];
+// Internal/admin fields from the base that should never surface in the UI at all.
+const HIDDEN_FIELD_KEYS = ['Alternate Category Considered', 'Classification Notes', 'File Name'];
 
 // ══════════════════════════════════════
 // STATE
@@ -767,13 +769,14 @@ function getSamples(fd, n = 6) {
 // 'Area of Emphasis' / 'Category' / 'Media Type' exist.
 function discoverFields() {
   const stats = {}; // key -> { filled, uniq:Set, kind }
-  const skip  = new Set(['_id', ...LINK_FIELD_KEYS]);
+  // Matched case-insensitively since the base's actual field-name casing may vary.
+  const skip  = new Set(['_id', ...LINK_FIELD_KEYS, ...HIDDEN_FIELD_KEYS].map(k => k.toLowerCase()));
   const known = new Set(FIELD_DEFS.map(f => f.key));
 
   ALL_RECORDS.forEach(r => {
     Object.keys(r).forEach(k => {
       if (isBlank(r[k])) return;
-      if (known.has(k) || skip.has(k)) return;
+      if (known.has(k) || skip.has(k.toLowerCase())) return;
       const v = r[k];
       const s = stats[k] || (stats[k] = { filled: 0, uniq: new Set(), kind: null });
       s.filled++;
