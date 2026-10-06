@@ -769,14 +769,14 @@ function getSamples(fd, n = 6) {
 // 'Area of Emphasis' / 'Category' / 'Media Type' exist.
 function discoverFields() {
   const stats = {}; // key -> { filled, uniq:Set, kind }
-  // Matched case-insensitively since the base's actual field-name casing may vary.
-  const skip  = new Set(['_id', ...LINK_FIELD_KEYS, ...HIDDEN_FIELD_KEYS].map(k => k.toLowerCase()));
+  // Matched case/whitespace-insensitively since the base's actual field-name spelling may vary.
+  const skip  = new Set(['_id', ...LINK_FIELD_KEYS, ...HIDDEN_FIELD_KEYS].map(k => k.trim().toLowerCase()));
   const known = new Set(FIELD_DEFS.map(f => f.key));
 
   ALL_RECORDS.forEach(r => {
     Object.keys(r).forEach(k => {
       if (isBlank(r[k])) return;
-      if (known.has(k) || skip.has(k.toLowerCase())) return;
+      if (known.has(k) || skip.has(k.trim().toLowerCase())) return;
       const v = r[k];
       const s = stats[k] || (stats[k] = { filled: 0, uniq: new Set(), kind: null });
       s.filled++;
